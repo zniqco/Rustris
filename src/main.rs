@@ -5,7 +5,7 @@ use rustris::Rustris;
 
 fn main() {
     let (mut rl, thread) = raylib::init()
-        .size(640, 480)
+        .size(1280, 720)
         .title("Rustris")
         .build();
 

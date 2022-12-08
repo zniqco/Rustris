@@ -1,3 +1,5 @@
+use raylib::prelude::*;
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum BlockType {
     Empty,
@@ -9,4 +11,19 @@ pub enum BlockType {
     Blue,
     Cyan,
     Purple,
+}
+
+impl BlockType {
+    pub fn get_color(&self) -> Color {
+        match self {
+            BlockType::Red => Color { r: 255, g: 0, b: 0, a: 255 },
+            BlockType::Orange => Color { r: 255, g: 128, b: 0, a: 255 },
+            BlockType::Yellow => Color { r: 255, g: 255, b: 0, a: 255 },
+            BlockType::Green => Color { r: 0, g: 255, b: 0, a: 255 },
+            BlockType::Blue => Color { r: 0, g: 0, b: 255, a: 255 },
+            BlockType::Cyan => Color { r: 0, g: 255, b: 255, a: 255 },
+            BlockType::Purple => Color { r: 160, g: 0, b: 255, a: 255 },
+            _ => Color::BLANK,
+        }
+    }
 }
