@@ -7,6 +7,9 @@ pub struct Rustris {
     game: Core
 }
 
+const DRAW_X: i32 = (640 - 160) / 2;
+const DRAW_Y: i32 = (480 - 320) / 2;
+
 impl Rustris {
     pub fn new() -> Self {
         Self {
@@ -33,7 +36,7 @@ impl Rustris {
     pub fn draw(&self, d: &mut RaylibDrawHandle) {
         d.clear_background(Color::BLACK);
 
-        d.draw_rectangle(0, 0, 10 * 16, 20 * 16, Color::DARKGRAY);
+        d.draw_rectangle(DRAW_X, DRAW_Y, 10 * 16, 20 * 16, Color::DARKGRAY);
 
         for y in 0..20 {
             for x in 0..self.game.board.get_width() {
@@ -52,11 +55,14 @@ impl Rustris {
                 }
             }
         }
+
+        d.draw_text("Score", DRAW_X + 180, DRAW_Y, 10, Color::WHITE);
+        d.draw_text(format!("{}", self.game.score).as_str(), DRAW_X + 180, DRAW_Y + 16, 20, Color::WHITE);
     }
 
     fn draw_block(&self, d: &mut RaylibDrawHandle, x: i32, y: i32, block: BlockType) {
-        let draw_x = x * 16;
-        let draw_y = (19 - y) * 16;
+        let draw_x = DRAW_X + x * 16;
+        let draw_y = DRAW_Y + (19 - y) * 16;
 
         match block {
             BlockType::Red => d.draw_rectangle(draw_x, draw_y, 16, 16, Color::RED),
