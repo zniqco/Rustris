@@ -3,13 +3,16 @@ mod rustris;
 
 use rustris::Rustris;
 
+const SCREEN_WIDTH: i32 = 1280;
+const SCREEN_HEIGHT: i32 = 720;
+
 fn main() {
     let (mut rl, thread) = raylib::init()
-        .size(1280, 720)
+        .size(SCREEN_WIDTH, SCREEN_HEIGHT)
         .title("Rustris")
         .build();
 
-    let mut rustris = Rustris::new();
+    let mut rustris = Rustris::new(SCREEN_WIDTH, SCREEN_HEIGHT);
 
     rustris.init();
 

@@ -4,18 +4,18 @@ use raylib::prelude::*;
 use self::core::*;
 
 pub struct Rustris {
-    game: Core
+    screen_width: i32,
+    screen_height: i32,
+    game: Core,
 }
 
 const CELL_SIZE: i32 = 30;
-const DISPLAY_WIDTH: i32 = 10;
-const DISPLAY_HEIGHT: i32 = 20;
-const DRAW_X: i32 = (1280 - CELL_SIZE * DISPLAY_WIDTH) / 2;
-const DRAW_Y: i32 = (720 - CELL_SIZE * DISPLAY_HEIGHT) / 2;
 
 impl Rustris {
-    pub fn new() -> Self {
+    pub fn new(screen_width: i32, screen_height: i32) -> Self {
         Self {
+            screen_width,
+            screen_height,
             game: Core::new(),
         }
     }
@@ -33,19 +33,44 @@ impl Rustris {
         self.game.input.set(InputType::Flip, rl.is_key_down(KeyboardKey::KEY_A));
         self.game.input.set(InputType::Hold, rl.is_key_down(KeyboardKey::KEY_C));
 
+        // for Debug
+        let mouse_left = rl.is_mouse_button_down(MouseButton::MOUSE_LEFT_BUTTON);
+        let mouse_right = rl.is_mouse_button_down(MouseButton::MOUSE_RIGHT_BUTTON);
+
+        if mouse_left || mouse_right {
+            let mouse_position = rl.get_mouse_position();
+            let board_width = self.game.board.width() as i32;
+            let board_height = self.game.board.height() as i32;
+            let board_x = (self.screen_width - CELL_SIZE * board_width) / 2;
+            let board_y = (self.screen_height - CELL_SIZE * board_height) / 2;
+            let grid_x = (mouse_position.x as i32 - board_x) / CELL_SIZE;
+            let grid_y = (board_y + CELL_SIZE * (board_height + 2) - mouse_position.y as i32 - board_y) / CELL_SIZE;
+
+            if mouse_left {
+                self.game.board.set_block(grid_x, grid_y, BlockType::Green);
+            } else if mouse_right {
+                self.game.board.set_block(grid_x, grid_y, BlockType::Empty);
+            }
+        }
+
         self.game.update(rl.get_frame_time());
     }
 
     pub fn draw(&self, d: &mut RaylibDrawHandle) {
         d.clear_background(Color::BLACK);
 
-        d.draw_rectangle(DRAW_X, DRAW_Y, 10 * CELL_SIZE, 20 * CELL_SIZE, Color::DARKGRAY);
+        let board_width = self.game.board.width() as i32;
+        let board_height = self.game.board.height() as i32;
+        let board_x = (self.screen_width - CELL_SIZE * board_width) / 2;
+        let board_y = (self.screen_height - CELL_SIZE * board_height) / 2;
 
-        for y in 0..20 {
-            for x in 0..self.game.board.get_width() {
+        d.draw_rectangle_lines(board_x - 1, board_y - 1, 10 * CELL_SIZE + 2, 20 * CELL_SIZE + 2, Color::WHITE);
+
+        for y in 0..board_height {
+            for x in 0..board_width {
                 let block = self.game.board.get_block(x, y);
 
-                self.draw_block(d, x, y, block);
+                self.draw_block(d, board_x, board_y, x, y, block);
             }
         }
 
@@ -54,18 +79,18 @@ impl Rustris {
                 for x in 0..4 {
                     let block = piece.get_block(x, y);
 
-                    self.draw_block(d, x + piece.x, y + piece.y, block);
+                    self.draw_block(d, board_x, board_y, x + piece.x, y + piece.y, block);
                 }
             }
         }
 
-        d.draw_text("Score", DRAW_X + CELL_SIZE * DISPLAY_WIDTH + 10, DRAW_Y, 20, Color::WHITE);
-        d.draw_text(format!("{}", self.game.score).as_str(), DRAW_X + CELL_SIZE * DISPLAY_WIDTH + 10, DRAW_Y + 24, 30, Color::WHITE);
+        d.draw_text("Score", board_x + CELL_SIZE * board_width + 10, board_y, 20, Color::WHITE);
+        d.draw_text(format!("{}", self.game.score).as_str(), board_x + CELL_SIZE * board_width + 10, board_y + 24, 30, Color::WHITE);
     }
 
-    fn draw_block(&self, d: &mut RaylibDrawHandle, x: i32, y: i32, block: BlockType) {
-        let draw_x = DRAW_X + x * CELL_SIZE;
-        let draw_y = DRAW_Y + (19 - y) * CELL_SIZE;
+    fn draw_block(&self, d: &mut RaylibDrawHandle, board_x: i32, board_y: i32, x: i32, y: i32, block: BlockType) {
+        let draw_x = board_x + x * CELL_SIZE;
+        let draw_y = board_y + (self.game.board.height() as i32 - 1 - y) * CELL_SIZE;
 
         match block {
             BlockType::Empty | BlockType::Outside => { },

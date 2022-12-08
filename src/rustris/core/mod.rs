@@ -5,6 +5,7 @@ mod input_type;
 mod input;
 mod piece_type;
 mod piece;
+mod row;
 mod tspin_type;
 
 use bag::*;
@@ -14,6 +15,7 @@ pub use input_type::*;
 pub use input::*;
 use piece_type::*;
 use piece::*;
+use row::*;
 use tspin_type::*;
 
 pub struct Core {
@@ -37,30 +39,27 @@ pub struct Core {
 impl Core {
     pub fn new() -> Self {
         Self {
-            board: Board::new(),
-            bag: Bag::new(),
+            board: Board::new(10, 20),
+            bag: Bag::new(None),
             current_piece: None,
             input: Input::new(),
             score: 0,
             level: 1,
             lines: 0,
 
-            das: 10.0f32 / 60.0f32,
-            arr: 1.0f32 / 60.0f32,
-            sdf: 1.0f32 / 60.0f32,
+            das: 10.0 / 60.0,
+            arr: 1.0 / 60.0,
+            sdf: 1.0 / 60.0,
 
             move_direction: 0,
-            move_delay: 0.0f32,
-            softdrop_delay: 0.0f32,
+            move_delay: 0.0,
+            softdrop_delay: 0.0,
         }
-    }
-
-    pub fn init(&mut self) {
     }
 
     pub fn update(&mut self, dt: f32) {
         if let None = &mut self.current_piece {
-            self.current_piece = Some(Piece::new(self.bag.pop()));
+            self.current_piece = Some(Piece::new(self.bag.pop(), self.board.width(), self.board.height()));
         }
 
         if let Some(piece) = &mut self.current_piece {
@@ -83,23 +82,24 @@ impl Core {
             if self.move_direction != 0 {
                 self.move_delay -= dt;
 
-                while self.move_delay <= 0.0f32 && piece.shift(&self.board, self.move_direction, 0) {
+                while self.move_delay <= 0.0 && piece.shift(&self.board, self.move_direction, 0) {
                     self.move_delay += self.arr;
                 }
             }
 
             // Soft drop
             if self.input.pressed(InputType::SoftDrop) {
-                piece.shift(&self.board, 0, -1);
+                if piece.shift(&self.board, 0, -1) {
+                    self.score += 1;
+                }
 
-                self.score += 1;
                 self.softdrop_delay = self.sdf;
             }
 
             if self.input.holded(InputType::SoftDrop) {
                 self.softdrop_delay -= dt;
 
-                while self.softdrop_delay <= 0.0f32 && piece.shift(&self.board, 0, -1) {
+                while self.softdrop_delay <= 0.0 && piece.shift(&self.board, 0, -1) {
                     self.score += 1;
                     self.softdrop_delay += self.sdf;
                 }
@@ -125,96 +125,54 @@ impl Core {
                 }
 
                 piece.place(&mut self.board);
+ 
+                let lines = self.board.process_lines();
+                let cleared = self.board.is_cleared();        
 
-                self.process_lines();
+                self.score += Self::get_points(self.level, lines, cleared, piece.tspin_state);
 
                 self.current_piece = None;
-                self.move_delay = 0.0f32;
+                self.move_delay = 0.0;
             }
         }
 
         self.input.update();
     }
 
-    fn process_lines(&mut self) -> i32 {
-        let tspin_state = match &self.current_piece {
-            Some(piece) => piece.tspin_state,
-            None => TSpinType::None,
-        };
-
-        let mut cleared = 0;
-        let mut all_clear = true;
-    
-        for j in 0..self.board.get_height() {
-            let mut is_cleared = true;
-            let mut is_blank_line = true;
-    
-            for i in 0..self.board.get_width() {
-                if self.board.get_block(i, j) == BlockType::Empty {
-                    is_cleared = false;
-                } else {
-                    is_blank_line = false;
-                }
-            }
-    
-            if is_cleared {
-                cleared += 1;
-            } else {
-                if !is_blank_line {
-                    all_clear = false;
-                }
-    
-                if cleared > 0 {
-                    for i in 0..self.board.get_width() {
-                        self.board.set_block(i, j - cleared, self.board.get_block(i, j));
-                    }
-    
-                    if j >= self.board.get_height() - cleared {
-                        for i in 0..self.board.get_width() {
-                            self.board.set_block(i, j, BlockType::Empty);
-                        }
-                    }
-                }
-            }
-        }
-
-        let points = match tspin_state {
-            TSpinType::None => match cleared {
-                1 => match all_clear {
+    fn get_points(level: i32, lines: usize, cleared: bool, tspin_state: TSpinType) -> i32 {
+        return match tspin_state {
+            TSpinType::None => match lines {
+                1 => match cleared {
                     true => 800,
                     false => 100,
                 },
-                2 => match all_clear {
+                2 => match cleared {
                     true => 1200,
                     false => 300,
                 },
-                3 => match all_clear {
+                3 => match cleared {
                     true => 1800,
                     false => 500,
                 },
-                4 => match all_clear {
+                4 => match cleared {
                     true => 2000,
                     false => 800,
                 },
                 _ => 0,
             },
-            TSpinType::Normal => match cleared {
+            TSpinType::Normal => match lines {
                 1 => 400,
                 2 => 800,
                 3 => 1200,
                 4 => 1600,
                 _ => 0,
             },
-            TSpinType::Mini => match cleared {
+            TSpinType::Mini => match lines {
                 0 => 100,
                 1 => 200,
                 2 => 400,
                 _ => 0,
             },
-        } * self.level;
-
-        self.score += points;
-
-        cleared
+        } * level;
     }
 }

@@ -1,3 +1,4 @@
+#[derive(Clone, Copy)]
 pub enum InputType {
     MoveLeft = 0,
     MoveRight,

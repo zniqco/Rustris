@@ -5,14 +5,17 @@ const MINIMUM_COUNT: usize = 7;
 
 pub struct Bag {
     pieces: Vec<PieceType>,
-    rng: ThreadRng,
+    rng: StdRng,
 }
 
 impl Bag {
-    pub fn new() -> Self {
+    pub fn new(seed: Option<u64>) -> Self {
         Self {
             pieces: Vec::new(),
-            rng: rand::thread_rng(),
+            rng: StdRng::seed_from_u64(match seed {
+                Some(x) => x,
+                None => Self::get_timestamp(),
+            }),
         }
     }
 
@@ -42,5 +45,9 @@ impl Bag {
         }
 
         self.pieces[index as usize]
+    }
+
+    fn get_timestamp() -> u64 {
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64
     }
 }

@@ -13,7 +13,7 @@ pub struct Piece {
 }
 
 impl Piece {
-    pub fn new(piece_type: PieceType) -> Self {
+    pub fn new(piece_type: PieceType, board_width: usize, board_height: usize) -> Self {
         let blocks = match piece_type {
             PieceType::Z => [
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
@@ -57,12 +57,6 @@ impl Piece {
                 [BlockType::Empty, BlockType::Purple, BlockType::Empty, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
-            _ => [
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-            ]
         };
 
         let size = match piece_type {
@@ -73,7 +67,6 @@ impl Piece {
             PieceType::I => (4, 4),
             PieceType::O => (4, 2),
             PieceType::T => (3, 3),
-            _ => (0, 0),
         };
 
         let kicks = match piece_type {
@@ -105,8 +98,8 @@ impl Piece {
             blocks,
             size,
             kicks,
-            x: 3,
-            y: 21 - size.1,
+            x: board_width as i32 / 2 - 2,
+            y: board_height as i32 + 1 - size.1,
             rotate_state: 0,
             tspin_state: TSpinType::None,
         }
@@ -215,14 +208,8 @@ impl Piece {
     fn test(&self, board: &Board) -> bool {
         for y in 0..4 {
             for x in 0..4 {
-                let block = self.get_block(x, y);
-
-                if block != BlockType::Empty {
-                    let board_block = board.get_block(self.x + x, self.y + y);
-
-                    if board_block != BlockType::Empty {
-                        return false;
-                    }
+                if self.get_block(x, y) != BlockType::Empty && board.get_block(self.x + x, self.y + y) != BlockType::Empty {
+                    return false;
                 }
             }
         }
