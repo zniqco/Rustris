@@ -61,40 +61,49 @@ impl Rustris {
 
         let board_width = self.game.board.width() as i32;
         let board_height = self.game.board.height() as i32;
-        let board_x = (self.screen_width - CELL_SIZE * board_width) / 2;
-        let board_y = (self.screen_height - CELL_SIZE * board_height) / 2;
+        let draw_left = (self.screen_width - CELL_SIZE * board_width) / 2;
+        let draw_bottom = (self.screen_height + CELL_SIZE * board_height) / 2;
+        let draw_top = draw_bottom - CELL_SIZE * board_height;
 
-        d.draw_rectangle_lines(board_x - 1, board_y - 1, 10 * CELL_SIZE + 2, 20 * CELL_SIZE + 2, Color::WHITE);
+        // Border
+        d.draw_rectangle_lines(draw_left - 1, draw_top - 1, board_width * CELL_SIZE + 2, board_height * CELL_SIZE + 2, Color::WHITE);
 
+        // Block
         for y in 0..board_height {
             for x in 0..board_width {
-                let block = self.game.board.get_block(x, y);
-
-                self.draw_block(d, board_x, board_y, x, y, block);
+                self.draw_block(d, draw_left, draw_bottom, x, y, self.game.board.get_block(x, y), 255);
             }
         }
 
         if let Some(piece) = &self.game.current_piece {
+            // Ghost
+            let mut ghost = piece.clone();
+
+            while ghost.shift(&self.game.board, 0, -1) {
+            }
+
             for y in 0..4 {
                 for x in 0..4 {
-                    let block = piece.get_block(x, y);
+                    self.draw_block(d, draw_left, draw_bottom, x + ghost.x, y + ghost.y, ghost.get_block(x, y), 80);
+                }
+            }
 
-                    self.draw_block(d, board_x, board_y, x + piece.x, y + piece.y, block);
+            // Piece
+            for y in 0..4 {
+                for x in 0..4 {
+                    self.draw_block(d, draw_left, draw_bottom, x + piece.x, y + piece.y, piece.get_block(x, y), 255);
                 }
             }
         }
 
-        d.draw_text("Score", board_x + CELL_SIZE * board_width + 10, board_y, 20, Color::WHITE);
-        d.draw_text(format!("{}", self.game.score).as_str(), board_x + CELL_SIZE * board_width + 10, board_y + 24, 30, Color::WHITE);
+        d.draw_text("Score", draw_left + CELL_SIZE * board_width + 10, draw_top, 20, Color::WHITE);
+        d.draw_text(format!("{}", self.game.score).as_str(), draw_left + CELL_SIZE * board_width + 10, draw_top + 24, 30, Color::WHITE);
     }
 
-    fn draw_block(&self, d: &mut RaylibDrawHandle, board_x: i32, board_y: i32, x: i32, y: i32, block: BlockType) {
-        let draw_x = board_x + x * CELL_SIZE;
-        let draw_y = board_y + (self.game.board.height() as i32 - 1 - y) * CELL_SIZE;
-
-        match block {
+    fn draw_block(&self, d: &mut RaylibDrawHandle, left: i32, bottom: i32, x: i32, y: i32, block_type: BlockType, alpha: u8) {
+        match block_type {
             BlockType::Empty | BlockType::Outside => { },
-            _ => d.draw_rectangle(draw_x, draw_y, CELL_SIZE, CELL_SIZE, block.get_color()),
+            _ => d.draw_rectangle(left + x * CELL_SIZE, bottom - (y + 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE, block_type.get_color(alpha)),
         }
     }
 }

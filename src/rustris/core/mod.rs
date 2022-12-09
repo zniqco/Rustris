@@ -58,7 +58,7 @@ impl Core {
     }
 
     pub fn update(&mut self, dt: f32) {
-        if let None = &mut self.current_piece {
+        if let None = &self.current_piece {
             self.current_piece = Some(Piece::new(self.bag.pop(), self.board.width(), self.board.height()));
         }
 
@@ -127,9 +127,14 @@ impl Core {
                 piece.place(&mut self.board);
  
                 let lines = self.board.process_lines();
-                let cleared = self.board.is_cleared();        
+                let cleared = self.board.is_cleared();
+                let points = Self::get_points(self.level, lines, cleared, piece.tspin_state);
 
-                self.score += Self::get_points(self.level, lines, cleared, piece.tspin_state);
+                self.score += points;
+
+                if lines >= 1 || piece.tspin_state != TSpinType::None {
+                    println!("points={}, lines={}, tspin={:?}", points, lines, piece.tspin_state);
+                }
 
                 self.current_piece = None;
                 self.move_delay = 0.0;
@@ -161,10 +166,10 @@ impl Core {
                 _ => 0,
             },
             TSpinType::Normal => match lines {
-                1 => 400,
-                2 => 800,
-                3 => 1200,
-                4 => 1600,
+                0 => 400,
+                1 => 800,
+                2 => 1200,
+                3 => 1600,
                 _ => 0,
             },
             TSpinType::Mini => match lines {

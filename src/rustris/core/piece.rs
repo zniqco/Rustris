@@ -1,8 +1,9 @@
 use super::*;
 
+#[derive(Clone)]
 pub struct Piece {
     piece_type: PieceType,
-    size: (i32, i32),
+    size: (usize, usize),
     blocks: [[BlockType; 4]; 4],
     kicks: [[(i32, i32); 5]; 8],
     rotate_state: i32,
@@ -14,47 +15,49 @@ pub struct Piece {
 
 impl Piece {
     pub fn new(piece_type: PieceType, board_width: usize, board_height: usize) -> Self {
+        let block_type = piece_type.get_block_type();
+
         let blocks = match piece_type {
             PieceType::Z => [
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, BlockType::Red, BlockType::Red, BlockType::Empty],
-                [BlockType::Red, BlockType::Red, BlockType::Empty, BlockType::Empty],
+                [BlockType::Empty, block_type, block_type, BlockType::Empty],
+                [block_type, block_type, BlockType::Empty, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
             PieceType::S => [
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Green, BlockType::Green, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, BlockType::Green, BlockType::Green, BlockType::Empty],
+                [block_type, block_type, BlockType::Empty, BlockType::Empty],
+                [BlockType::Empty, block_type, block_type, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
             PieceType::L => [
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Orange, BlockType::Orange, BlockType::Orange, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Orange, BlockType::Empty],
+                [block_type, block_type, block_type, BlockType::Empty],
+                [BlockType::Empty, BlockType::Empty, block_type, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
             PieceType::J => [
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Blue, BlockType::Blue, BlockType::Blue, BlockType::Empty],
-                [BlockType::Blue, BlockType::Empty, BlockType::Empty, BlockType::Empty],
+                [block_type, block_type, block_type, BlockType::Empty],
+                [block_type, BlockType::Empty, BlockType::Empty, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
             PieceType::I => [
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Cyan, BlockType::Cyan, BlockType::Cyan, BlockType::Cyan],
+                [block_type, block_type, block_type, block_type],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
             PieceType::O => [
-                [BlockType::Empty, BlockType::Yellow, BlockType::Yellow, BlockType::Empty],
-                [BlockType::Empty, BlockType::Yellow, BlockType::Yellow, BlockType::Empty],
+                [BlockType::Empty, block_type, block_type, BlockType::Empty],
+                [BlockType::Empty, block_type, block_type, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
             PieceType::T => [
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Purple, BlockType::Purple, BlockType::Purple, BlockType::Empty],
-                [BlockType::Empty, BlockType::Purple, BlockType::Empty, BlockType::Empty],
+                [block_type, block_type, block_type, BlockType::Empty],
+                [BlockType::Empty, block_type, BlockType::Empty, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
         };
@@ -99,7 +102,7 @@ impl Piece {
             size,
             kicks,
             x: board_width as i32 / 2 - 2,
-            y: board_height as i32 + 1 - size.1,
+            y: board_height as i32 + 1 - size.1 as i32,
             rotate_state: 0,
             tspin_state: TSpinType::None,
         }
@@ -146,12 +149,12 @@ impl Piece {
         let previous_y = self.y;
         let copied = self.blocks.clone();
 
-        for y in 0..self.size.0 as usize {
-            for x in 0..self.size.1 as usize {
+        for y in 0..self.size.0 {
+            for x in 0..self.size.1 {
                 if clockwise {
-                    self.blocks[self.size.0 as usize - 1 - x][y] = copied[y][x];
+                    self.blocks[self.size.0 - 1 - x][y] = copied[y][x];
                 } else {
-                    self.blocks[x][self.size.1 as usize - 1 - y] = copied[y][x];
+                    self.blocks[x][self.size.1 - 1 - y] = copied[y][x];
                 }
             }
         }
@@ -185,9 +188,9 @@ impl Piece {
 
         let copied = self.blocks.clone();
 
-        for y in 0..self.size.0 as usize {
-            for x in 0..self.size.1 as usize {
-                self.blocks[self.size.0 as usize - 1 - y][self.size.1 as usize - 1 - x] = copied[y][x];
+        for y in 0..self.size.0 {
+            for x in 0..self.size.1 {
+                self.blocks[self.size.0 - 1 - y][self.size.1 - 1 - x] = copied[y][x];
             }
         }
 
@@ -227,10 +230,10 @@ impl Piece {
             ];
 
             if corner_states[0] + corner_states[1] + corner_states[2] + corner_states[3] >= 3 {
-                let front_0 = (0 + self.rotate_state) & 0x03;
-                let front_1 = (1 + self.rotate_state) & 0x03;
+                let front_0 = ((0 + self.rotate_state) & 0x03) as usize;
+                let front_1 = ((1 + self.rotate_state) & 0x03) as usize;
 
-                if corner_states[front_0 as usize] == 1 && corner_states[front_1 as usize] == 1 {
+                if corner_states[front_0] + corner_states[front_1] == 2 {
                     self.tspin_state = TSpinType::Normal;
                 } else {
                     self.tspin_state = TSpinType::Mini;
