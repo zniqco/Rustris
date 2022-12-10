@@ -57,7 +57,7 @@ impl Board {
         self.rows.len()
     }
 
-    pub fn process_lines(&mut self) -> usize {
+    pub fn process_lines(&mut self) -> i32 {
         let mut lines = 0;
 
         for i in (0..self.rows.len()).rev() {

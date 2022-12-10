@@ -117,9 +117,17 @@ impl Rustris {
             self.draw_preview(d, draw_right + 70, draw_top + 70 + i * 60, self.game.bag.get(i));
         }
 
+        // Level
+        d.draw_text_right("Level", draw_left - 20, draw_top + 140, 20, Color::WHITE);
+        d.draw_text_right(format!("{}", self.game.level).as_str(), draw_left - 20, draw_top + 166, 40, Color::WHITE);
+
+        // Lines
+        d.draw_text_right("Lines", draw_left - 20, draw_top + 222, 20, Color::WHITE);
+        d.draw_text_right(format!("{}", self.game.lines).as_str(), draw_left - 20, draw_top + 246, 40, Color::WHITE);
+
         // Score
-        d.draw_text_right("Score", draw_left - 20, draw_top + 140, 20, Color::WHITE);
-        d.draw_text_right(format!("{}", self.game.score).as_str(), draw_left - 20, draw_top + 168, 40, Color::WHITE);
+        d.draw_text_right("Score", draw_left - 20, draw_top + 300, 20, Color::WHITE);
+        d.draw_text_right(format!("{}", self.game.score).as_str(), draw_left - 20, draw_top + 326, 40, Color::WHITE);
     }
 
     fn draw_block(&self, d: &mut RaylibDrawHandle, left: i32, bottom: i32, x: i32, y: i32, block_type: BlockType, alpha: u8) {

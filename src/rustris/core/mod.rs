@@ -4,6 +4,7 @@ mod board;
 mod config;
 mod input_type;
 mod input;
+mod level_data;
 mod piece_type;
 mod piece;
 mod row;
@@ -15,12 +16,14 @@ use board::*;
 pub use config::*;
 pub use input_type::*;
 pub use input::*;
+pub use level_data::*;
 pub use piece_type::*;
 use piece::*;
 use row::*;
 use tspin_type::*;
 
 pub struct Core {
+    pub config: Config,
     pub board: Board,
     pub bag: Bag,
     pub current_piece: Option<Piece>,
@@ -28,30 +31,39 @@ pub struct Core {
     pub score: i32,
     pub level: i32,
     pub lines: i32,
-    pub config: Config,
     pub hold_piece: Option<PieceType>,
     hold_enabled: bool,
     move_direction: i32,
     move_delay: f32,
     softdrop_delay: f32,
+    gravity_delta: f32,
+    level_data: LevelData,
+    lines_offset: i32,
 }
 
 impl Core {
     pub fn new(config: Config) -> Self {
+        let width = config.width;
+        let height = config.height;
+        let first_level = config.levels[0];
+
         Self {
-            board: Board::new(10, 20),
+            config: config,
+            board: Board::new(width, height),
             bag: Bag::new(None),
             current_piece: None,
             input: Input::new(),
             score: 0,
             level: 1,
             lines: 0,
-            config,
             hold_piece: None,
             hold_enabled: true,
             move_direction: 0,
             move_delay: 0.0,
             softdrop_delay: 0.0,
+            gravity_delta: 0.0,
+            level_data: first_level,
+            lines_offset: 0,
         }
     }
 
@@ -98,10 +110,22 @@ impl Core {
                 }
             }
 
+            // Gravity
+            self.gravity_delta += self.level_data.gravity * 60.0 * dt;
+
+            while self.gravity_delta >= 1.0 {
+                if piece.shift(&self.board, 0, -1) {
+                    self.gravity_delta -= 1.0;
+                } else {
+                    self.gravity_delta = 0.0;
+                }
+            }
+
             // Soft drop
             if self.input.pressed(InputType::SoftDrop) {
                 if piece.shift(&self.board, 0, -1) {
                     self.score += 1;
+                    self.gravity_delta = 0.0;
                 }
 
                 self.softdrop_delay = self.config.sdf;
@@ -114,6 +138,7 @@ impl Core {
                     if piece.shift(&self.board, 0, -1) {
                         self.score += 1;
                         self.softdrop_delay += self.config.sdf;
+                        self.gravity_delta = 0.0;
                     } else {
                         self.softdrop_delay = 0.0;
 
@@ -148,21 +173,29 @@ impl Core {
                 let points = Self::get_points(self.level, lines, cleared, piece.tspin_state);
 
                 self.score += points;
-
+                self.lines += lines;
+                
                 if lines >= 1 || piece.tspin_state != TSpinType::None {
                     println!("points={}, lines={}, tspin={:?}", points, lines, piece.tspin_state);
+                }
+
+                while self.level_data.lines > 0 && self.lines - self.lines_offset >= self.level_data.lines {
+                    self.lines_offset += self.level_data.lines;
+                    self.level += 1;
+                    self.level_data = self.config.levels[(self.level - 1) as usize];
                 }
 
                 self.current_piece = None;
                 self.hold_enabled = true;
                 self.move_delay = 0.0;
+                self.gravity_delta = 0.0;
             }
         }
 
         self.input.update();
     }
 
-    fn get_points(level: i32, lines: usize, cleared: bool, tspin_state: TSpinType) -> i32 {
+    fn get_points(level: i32, lines: i32, cleared: bool, tspin_state: TSpinType) -> i32 {
         return match tspin_state {
             TSpinType::None => match lines {
                 1 => match cleared {
