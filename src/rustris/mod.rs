@@ -74,7 +74,7 @@ impl Rustris {
         d.draw_rectangle_lines(draw_left - 1, draw_top - 1, board_width * CELL_SIZE + 2, board_height * CELL_SIZE + 2, Color::WHITE);
 
         // Block
-        for y in 0..board_height {
+        for y in 0..self.game.board.row_count() as i32 {
             for x in 0..board_width {
                 self.draw_block(d, draw_left, draw_bottom, x, y, self.game.board.get_block(x, y), 255);
             }

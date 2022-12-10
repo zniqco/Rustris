@@ -53,6 +53,10 @@ impl Board {
         self.height
     }
 
+    pub fn row_count(&self) -> usize {
+        self.rows.len()
+    }
+
     pub fn process_lines(&mut self) -> usize {
         let mut lines = 0;
 
