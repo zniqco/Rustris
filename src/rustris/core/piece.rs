@@ -208,7 +208,7 @@ impl Piece {
         false
     }
 
-    fn test(&self, board: &Board) -> bool {
+    pub fn test(&self, board: &Board) -> bool {
         for y in 0..4 {
             for x in 0..4 {
                 if self.get_block(x, y) != BlockType::Empty && board.get_block(self.x + x, self.y + y) != BlockType::Empty {

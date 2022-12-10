@@ -39,6 +39,7 @@ pub struct Core {
     gravity_delta: f32,
     level_data: LevelData,
     lines_offset: i32,
+    game_over: bool,
 }
 
 impl Core {
@@ -64,25 +65,44 @@ impl Core {
             gravity_delta: 0.0,
             level_data: first_level,
             lines_offset: 0,
+            game_over: false,
         }
     }
 
     pub fn update(&mut self, dt: f32) {
-        if self.input.pressed(InputType::Hold) && self.hold_enabled {
-            if let Some(hold_piece) = self.hold_piece {
-                self.bag.push_front(hold_piece);
+        if !self.game_over {
+            if self.input.pressed(InputType::Hold) && self.hold_enabled {
+                if let Some(hold_piece) = self.hold_piece {
+                    self.bag.push_front(hold_piece);
+                }
+
+                if let Some(piece) = &mut self.current_piece {
+                    self.hold_piece = Some(piece.piece_type);
+                    self.current_piece = None;
+                }
+
+                self.hold_enabled = false;
             }
 
-            if let Some(piece) = &mut self.current_piece {
-                self.hold_piece = Some(piece.piece_type);
-                self.current_piece = None;
+            if let None = &self.current_piece {
+                let mut new_piece = Piece::new(self.bag.pop(), self.board.width(), self.board.height());
+
+                if new_piece.test(&self.board) {
+                    self.current_piece = Some(new_piece);
+                } else {
+                    new_piece.place(&mut self.board);
+
+                    for y in 0..self.board.row_count() as i32 {
+                        for x in 0..self.board.width() as i32 {
+                            if self.board.get_block(x, y) != BlockType::Empty {
+                                self.board.set_block(x, y, BlockType::Gray);
+                            }
+                        }
+                    }
+
+                    self.game_over = true;
+                }
             }
-
-            self.hold_enabled = false;
-        }
-
-        if let None = &self.current_piece {
-            self.current_piece = Some(Piece::new(self.bag.pop(), self.board.width(), self.board.height()));
         }
 
         if let Some(piece) = &mut self.current_piece {

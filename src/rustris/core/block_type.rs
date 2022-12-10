@@ -11,6 +11,7 @@ pub enum BlockType {
     Blue,
     Cyan,
     Purple,
+    Gray,
 }
 
 impl BlockType {
@@ -23,6 +24,7 @@ impl BlockType {
             BlockType::Blue => Color { r: 0, g: 0, b: 255, a },
             BlockType::Cyan => Color { r: 0, g: 255, b: 255, a },
             BlockType::Purple => Color { r: 160, g: 0, b: 255, a },
+            BlockType::Gray => Color { r: 112, g: 112, b: 112, a },
             _ => Color::BLANK,
         }
     }
