@@ -10,9 +10,11 @@ pub struct Rustris {
     screen_height: i32,
     game: Core,
     background_texture: Option<Texture2D>,
+    blocks_texture: Option<Texture2D>,
 }
 
 const CELL_SIZE: i32 = 30;
+const PREVIEW_CELL_SIZE: i32 = 20;
 
 impl Rustris {
     pub fn new(screen_width: i32, screen_height: i32) -> Self {
@@ -23,11 +25,13 @@ impl Rustris {
                 ..Default::default()
             }),
             background_texture: None,
+            blocks_texture: None,
         }
     }
 
     pub fn init(&mut self, rl: &mut RaylibHandle, rt: &RaylibThread) {
         self.background_texture = rl.load_texture_from_bytes(rt, ".png", include_bytes!("..\\resources\\background.png"));
+        self.blocks_texture = rl.load_texture_from_bytes(rt, ".png", include_bytes!("..\\resources\\blocks.png"));
     }
 
     pub fn update(&mut self, rl: &mut RaylibHandle) {
@@ -137,26 +141,41 @@ impl Rustris {
     fn draw_block(&self, d: &mut RaylibDrawHandle, left: i32, bottom: i32, x: i32, y: i32, block_type: BlockType, alpha: u8) {
         match block_type {
             BlockType::Empty | BlockType::Outside => { },
-            _ => d.draw_rectangle(left + x * CELL_SIZE, bottom - (y + 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE, block_type.get_color(alpha)),
+            _ => {
+                if let Some(texture) = &self.blocks_texture {
+                    d.draw_texture_pro(texture,
+                        rrect(block_type as i32 * 30, 0, 30, 30),
+                        rrect(left + x * CELL_SIZE, bottom - (y + 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE),
+                        rvec2(0, 0),
+                        0.0,
+                        Color::new(255, 255, 255, alpha)
+                    );
+                }
+            }
         }
     }
 
     fn draw_preview(&self, d: &mut RaylibDrawHandle, x: i32, y: i32, piece_type: PieceType) {
-        let array = match piece_type {
-            PieceType::Z => [(-1.0, -0.5), (0.0, -0.5), (0.0, 0.5), (1.0, 0.5)],
-            PieceType::S => [(1.0, -0.5), (0.0, -0.5), (0.0, 0.5), (-1.0, 0.5)],
-            PieceType::L => [(-1.0, 0.5), (0.0, 0.5), (1.0, 0.5), (1.0, -0.5)],
-            PieceType::J => [(-1.0, -0.5), (-1.0, 0.5), (0.0, 0.5), (1.0, 0.5)],
-            PieceType::I => [(-1.5, 0.0), (-0.5, 0.0), (0.5, 0.0), (1.5, 0.0)],
-            PieceType::O => [(-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)],
-            PieceType::T => [(-1.0, 0.5), (0.0, 0.5), (0.0, -0.5), (1.0, 0.5)],
-        };
+        if let Some(texture) = &self.blocks_texture {
+            let array = match piece_type {
+                PieceType::Z => [(-1.0, -0.5), (0.0, -0.5), (0.0, 0.5), (1.0, 0.5)],
+                PieceType::S => [(1.0, -0.5), (0.0, -0.5), (0.0, 0.5), (-1.0, 0.5)],
+                PieceType::L => [(-1.0, 0.5), (0.0, 0.5), (1.0, 0.5), (1.0, -0.5)],
+                PieceType::J => [(-1.0, -0.5), (-1.0, 0.5), (0.0, 0.5), (1.0, 0.5)],
+                PieceType::I => [(-1.5, 0.0), (-0.5, 0.0), (0.5, 0.0), (1.5, 0.0)],
+                PieceType::O => [(-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)],
+                PieceType::T => [(-1.0, 0.5), (0.0, 0.5), (0.0, -0.5), (1.0, 0.5)],
+            };
 
-        let color = piece_type.get_block_type().get_color(255);
-        let cell_size = 20;
-
-        for i in 0..4 {
-            d.draw_rectangle(x + ((array[i].0 - 0.5) * cell_size as f32) as i32, y + ((array[i].1 - 0.5) * cell_size as f32) as i32, cell_size, cell_size, color);
+            for cell in array {
+                d.draw_texture_pro(texture,
+                    rrect(piece_type.get_block_type() as i32 * 30, 0, 30, 30),
+                    rrect(x + ((cell.0 - 0.5) * PREVIEW_CELL_SIZE as f32) as i32, y + ((cell.1 - 0.5) * PREVIEW_CELL_SIZE as f32) as i32, PREVIEW_CELL_SIZE, PREVIEW_CELL_SIZE),
+                    rvec2(0, 0),
+                    0.0,
+                    Color::WHITE
+                );
+            }
         }
     }
 

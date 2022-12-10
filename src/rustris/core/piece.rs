@@ -24,22 +24,22 @@ impl Piece {
                 [block_type, block_type, BlockType::Empty, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
-            PieceType::S => [
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [block_type, block_type, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, block_type, block_type, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-            ],
             PieceType::L => [
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
                 [block_type, block_type, block_type, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, block_type, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
-            PieceType::J => [
+            PieceType::O => [
+                [BlockType::Empty, block_type, block_type, BlockType::Empty],
+                [BlockType::Empty, block_type, block_type, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [block_type, block_type, block_type, BlockType::Empty],
-                [block_type, BlockType::Empty, BlockType::Empty, BlockType::Empty],
+                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
+            ],
+            PieceType::S => [
+                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
+                [block_type, block_type, BlockType::Empty, BlockType::Empty],
+                [BlockType::Empty, block_type, block_type, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
             PieceType::I => [
@@ -48,10 +48,10 @@ impl Piece {
                 [block_type, block_type, block_type, block_type],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
-            PieceType::O => [
-                [BlockType::Empty, block_type, block_type, BlockType::Empty],
-                [BlockType::Empty, block_type, block_type, BlockType::Empty],
+            PieceType::J => [
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
+                [block_type, block_type, block_type, BlockType::Empty],
+                [block_type, BlockType::Empty, BlockType::Empty, BlockType::Empty],
                 [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
             ],
             PieceType::T => [
@@ -64,11 +64,11 @@ impl Piece {
 
         let size = match piece_type {
             PieceType::Z => (3, 3),
-            PieceType::S => (3, 3),
             PieceType::L => (3, 3),
-            PieceType::J => (3, 3),
-            PieceType::I => (4, 4),
             PieceType::O => (4, 2),
+            PieceType::S => (3, 3),
+            PieceType::I => (4, 4),
+            PieceType::J => (3, 3),
             PieceType::T => (3, 3),
         };
 
