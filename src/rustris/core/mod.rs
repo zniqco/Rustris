@@ -29,6 +29,8 @@ pub struct Core {
     pub level: i32,
     pub lines: i32,
     pub config: Config,
+    hold_piece: Option<PieceType>,
+    hold_enabled: bool,
     move_direction: i32,
     move_delay: f32,
     softdrop_delay: f32,
@@ -45,6 +47,8 @@ impl Core {
             level: 1,
             lines: 0,
             config,
+            hold_piece: None,
+            hold_enabled: true,
             move_direction: 0,
             move_delay: 0.0,
             softdrop_delay: 0.0,
@@ -52,6 +56,19 @@ impl Core {
     }
 
     pub fn update(&mut self, dt: f32) {
+        if self.input.pressed(InputType::Hold) && self.hold_enabled {
+            if let Some(hold_piece) = self.hold_piece {
+                self.bag.push_front(hold_piece);
+            }
+
+            if let Some(piece) = &mut self.current_piece {
+                self.hold_piece = Some(piece.piece_type);
+                self.current_piece = None;
+            }
+
+            self.hold_enabled = false;
+        }
+
         if let None = &self.current_piece {
             self.current_piece = Some(Piece::new(self.bag.pop(), self.board.width(), self.board.height()));
         }
@@ -137,6 +154,7 @@ impl Core {
                 }
 
                 self.current_piece = None;
+                self.hold_enabled = true;
                 self.move_delay = 0.0;
             }
         }

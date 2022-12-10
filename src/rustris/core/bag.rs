@@ -27,6 +27,10 @@ impl Bag {
         piece
     }
 
+    pub fn push_front(&mut self, piece_type: PieceType) {
+        self.pieces.insert(0, piece_type);
+    }
+
     pub fn get(&mut self, index: u32) -> PieceType {
         while self.pieces.len() < MINIMUM_COUNT {
             let mut next: Vec<PieceType> = vec![

@@ -2,12 +2,12 @@ use super::*;
 
 #[derive(Clone)]
 pub struct Piece {
-    piece_type: PieceType,
     size: (usize, usize),
     blocks: [[BlockType; 4]; 4],
     kicks: [[(i32, i32); 5]; 8],
     rotate_state: i32,
     
+    pub piece_type: PieceType,
     pub x: i32,
     pub y: i32,
     pub tspin_state: TSpinType,
@@ -97,13 +97,13 @@ impl Piece {
         };
 
         Self {
-            piece_type,
             blocks,
             size,
             kicks,
+            rotate_state: 0,
+            piece_type,
             x: board_width as i32 / 2 - 2,
             y: board_height as i32 + 1 - size.1 as i32,
-            rotate_state: 0,
             tspin_state: TSpinType::None,
         }
     }
