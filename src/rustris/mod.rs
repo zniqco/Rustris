@@ -1,7 +1,9 @@
 mod core;
+mod raylib_extension;
 
 use raylib::prelude::*;
 use self::core::*;
+use self::raylib_extension::RaylibExtension;
 
 pub struct Rustris {
     screen_width: i32,
@@ -64,6 +66,7 @@ impl Rustris {
         let board_width = self.game.board.width() as i32;
         let board_height = self.game.board.height() as i32;
         let draw_left = (self.screen_width - CELL_SIZE * board_width) / 2;
+        let draw_right = draw_left + CELL_SIZE * board_width;
         let draw_bottom = (self.screen_height + CELL_SIZE * board_height) / 2;
         let draw_top = draw_bottom - CELL_SIZE * board_height;
 
@@ -98,14 +101,50 @@ impl Rustris {
             }
         }
 
-        d.draw_text("Score", draw_left + CELL_SIZE * board_width + 10, draw_top, 20, Color::WHITE);
-        d.draw_text(format!("{}", self.game.score).as_str(), draw_left + CELL_SIZE * board_width + 10, draw_top + 24, 30, Color::WHITE);
+        // Hold
+        d.draw_text_right("Hold", draw_left - 20, draw_top, 20, Color::WHITE);
+        d.draw_rectangle_lines(draw_left - 121, draw_top + 29, 102, 82, Color::WHITE);
+
+        if let Some(hold_piece) = self.game.hold_piece {
+            self.draw_preview(d, draw_left - 70, draw_top + 70, hold_piece);
+        }
+
+        // Next
+        d.draw_text("Next", draw_right + 20, draw_top, 20, Color::WHITE);
+        d.draw_rectangle_lines(draw_right + 19, draw_top + 29, 102, 322, Color::WHITE);
+
+        for i in 0..5 {
+            self.draw_preview(d, draw_right + 70, draw_top + 70 + i * 60, self.game.bag.get(i));
+        }
+
+        // Score
+        d.draw_text_right("Score", draw_left - 20, draw_top + 140, 20, Color::WHITE);
+        d.draw_text_right(format!("{}", self.game.score).as_str(), draw_left - 20, draw_top + 168, 40, Color::WHITE);
     }
 
     fn draw_block(&self, d: &mut RaylibDrawHandle, left: i32, bottom: i32, x: i32, y: i32, block_type: BlockType, alpha: u8) {
         match block_type {
             BlockType::Empty | BlockType::Outside => { },
             _ => d.draw_rectangle(left + x * CELL_SIZE, bottom - (y + 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE, block_type.get_color(alpha)),
+        }
+    }
+
+    fn draw_preview(&self, d: &mut RaylibDrawHandle, x: i32, y: i32, piece_type: PieceType) {
+        let array = match piece_type {
+            PieceType::Z => [(-1.0, -0.5), (0.0, -0.5), (0.0, 0.5), (1.0, 0.5)],
+            PieceType::S => [(1.0, -0.5), (0.0, -0.5), (0.0, 0.5), (-1.0, 0.5)],
+            PieceType::L => [(-1.0, 0.5), (0.0, 0.5), (1.0, 0.5), (1.0, -0.5)],
+            PieceType::J => [(-1.0, -0.5), (-1.0, 0.5), (0.0, 0.5), (1.0, 0.5)],
+            PieceType::I => [(-1.5, 0.0), (-0.5, 0.0), (0.5, 0.0), (1.5, 0.0)],
+            PieceType::O => [(-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)],
+            PieceType::T => [(-1.0, 0.5), (0.0, 0.5), (0.0, -0.5), (1.0, 0.5)],
+        };
+
+        let color = piece_type.get_block_type().get_color(255);
+        let cell_size = 20;
+
+        for i in 0..4 {
+            d.draw_rectangle(x + ((array[i].0 - 0.5) * cell_size as f32) as i32, y + ((array[i].1 - 0.5) * cell_size as f32) as i32, cell_size, cell_size, color);
         }
     }
 }

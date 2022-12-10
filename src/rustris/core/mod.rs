@@ -15,7 +15,7 @@ use board::*;
 pub use config::*;
 pub use input_type::*;
 pub use input::*;
-use piece_type::*;
+pub use piece_type::*;
 use piece::*;
 use row::*;
 use tspin_type::*;
@@ -29,7 +29,7 @@ pub struct Core {
     pub level: i32,
     pub lines: i32,
     pub config: Config,
-    hold_piece: Option<PieceType>,
+    pub hold_piece: Option<PieceType>,
     hold_enabled: bool,
     move_direction: i32,
     move_delay: f32,
