@@ -14,7 +14,7 @@ fn main() {
 
     let mut rustris = Rustris::new(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    rustris.init();
+    rustris.init(&mut rl, &thread);
 
     while !rl.window_should_close() {
         rustris.update(&mut rl);

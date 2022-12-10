@@ -1,14 +1,15 @@
 mod core;
-mod raylib_extension;
+mod raylib_extensions;
 
 use raylib::prelude::*;
 use self::core::*;
-use self::raylib_extension::RaylibExtension;
+use self::raylib_extensions::*;
 
 pub struct Rustris {
     screen_width: i32,
     screen_height: i32,
     game: Core,
+    background_texture: Option<Texture2D>,
 }
 
 const CELL_SIZE: i32 = 30;
@@ -21,10 +22,12 @@ impl Rustris {
             game: Core::new(Config {
                 ..Default::default()
             }),
+            background_texture: None,
         }
     }
 
-    pub fn init(&mut self) {
+    pub fn init(&mut self, rl: &mut RaylibHandle, rt: &RaylibThread) {
+        self.background_texture = rl.load_texture_from_bytes(rt, ".png", include_bytes!("..\\resources\\background.png"));
     }
 
     pub fn update(&mut self, rl: &mut RaylibHandle) {
@@ -63,6 +66,10 @@ impl Rustris {
     pub fn draw(&self, d: &mut RaylibDrawHandle) {
         d.clear_background(Color::BLACK);
 
+        if let Some(texture) = &self.background_texture {
+            d.draw_texture(texture, 0, 0, Color::WHITE);
+        }
+
         let board_width = self.game.board.width() as i32;
         let board_height = self.game.board.height() as i32;
         let draw_left = (self.screen_width - CELL_SIZE * board_width) / 2;
@@ -70,10 +77,9 @@ impl Rustris {
         let draw_bottom = (self.screen_height + CELL_SIZE * board_height) / 2;
         let draw_top = draw_bottom - CELL_SIZE * board_height;
 
-        // Border
-        d.draw_rectangle_lines(draw_left - 1, draw_top - 1, board_width * CELL_SIZE + 2, board_height * CELL_SIZE + 2, Color::WHITE);
+        // Board
+        self.draw_panel(d, draw_left, draw_top, board_width * CELL_SIZE, board_height * CELL_SIZE);
 
-        // Block
         for y in 0..self.game.board.row_count() as i32 {
             for x in 0..board_width {
                 self.draw_block(d, draw_left, draw_bottom, x, y, self.game.board.get_block(x, y), 255);
@@ -81,7 +87,6 @@ impl Rustris {
         }
 
         if let Some(piece) = &self.game.current_piece {
-            // Ghost
             let mut ghost = piece.clone();
 
             while ghost.shift(&self.game.board, 0, -1) {
@@ -93,7 +98,6 @@ impl Rustris {
                 }
             }
 
-            // Piece
             for y in 0..4 {
                 for x in 0..4 {
                     self.draw_block(d, draw_left, draw_bottom, x + piece.x, y + piece.y, piece.get_block(x, y), 255);
@@ -103,7 +107,7 @@ impl Rustris {
 
         // Hold
         d.draw_text_right("Hold", draw_left - 20, draw_top, 20, Color::WHITE);
-        d.draw_rectangle_lines(draw_left - 121, draw_top + 29, 102, 82, Color::WHITE);
+        self.draw_panel(d, draw_left - 121, draw_top + 29, 102, 82);
 
         if let Some(hold_piece) = self.game.hold_piece {
             self.draw_preview(d, draw_left - 70, draw_top + 70, hold_piece);
@@ -111,7 +115,7 @@ impl Rustris {
 
         // Next
         d.draw_text("Next", draw_right + 20, draw_top, 20, Color::WHITE);
-        d.draw_rectangle_lines(draw_right + 19, draw_top + 29, 102, 322, Color::WHITE);
+        self.draw_panel(d, draw_right + 19, draw_top + 29, 102, 322);
 
         for i in 0..5 {
             self.draw_preview(d, draw_right + 70, draw_top + 70 + i * 60, self.game.bag.get(i));
@@ -154,5 +158,17 @@ impl Rustris {
         for i in 0..4 {
             d.draw_rectangle(x + ((array[i].0 - 0.5) * cell_size as f32) as i32, y + ((array[i].1 - 0.5) * cell_size as f32) as i32, cell_size, cell_size, color);
         }
+    }
+
+    fn draw_panel(&self, d: &mut RaylibDrawHandle, x: i32, y: i32, width: i32, height: i32) {
+        d.draw_rectangle_lines_ex(Rectangle {
+            x: (x - 2) as f32,
+            y: (y - 2) as f32,
+            width: (width + 4) as f32,
+            height: (height + 4) as f32
+        }, 2, Color::WHITE);
+
+        d.draw_rectangle(x, y, width, height, Color { r: 0, g: 0, b: 0, a: 224 });
+
     }
 }
