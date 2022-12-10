@@ -42,9 +42,9 @@ impl Rustris {
             let board_width = self.game.board.width() as i32;
             let board_height = self.game.board.height() as i32;
             let board_x = (self.screen_width - CELL_SIZE * board_width) / 2;
-            let board_y = (self.screen_height - CELL_SIZE * board_height) / 2;
+            let board_y = (self.screen_height + CELL_SIZE * board_height) / 2;
             let grid_x = (mouse_position.x as i32 - board_x) / CELL_SIZE;
-            let grid_y = (board_y + CELL_SIZE * (board_height + 2) - mouse_position.y as i32 - board_y) / CELL_SIZE;
+            let grid_y = (board_y - mouse_position.y as i32) / CELL_SIZE;
 
             if mouse_left {
                 self.game.board.set_block(grid_x, grid_y, BlockType::Green);
