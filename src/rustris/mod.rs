@@ -16,7 +16,9 @@ impl Rustris {
         Self {
             screen_width,
             screen_height,
-            game: Core::new(),
+            game: Core::new(Config {
+                ..Default::default()
+            }),
         }
     }
 

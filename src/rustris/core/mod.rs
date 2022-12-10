@@ -1,6 +1,7 @@
 mod bag;
 mod block_type;
 mod board;
+mod config;
 mod input_type;
 mod input;
 mod piece_type;
@@ -11,6 +12,7 @@ mod tspin_type;
 use bag::*;
 pub use block_type::*;
 use board::*;
+pub use config::*;
 pub use input_type::*;
 pub use input::*;
 use piece_type::*;
@@ -26,18 +28,14 @@ pub struct Core {
     pub score: i32,
     pub level: i32,
     pub lines: i32,
-
-    das: f32,
-    arr: f32,
-    sdf: f32,
-
+    pub config: Config,
     move_direction: i32,
     move_delay: f32,
     softdrop_delay: f32,
 }
 
 impl Core {
-    pub fn new() -> Self {
+    pub fn new(config: Config) -> Self {
         Self {
             board: Board::new(10, 20),
             bag: Bag::new(None),
@@ -46,11 +44,7 @@ impl Core {
             score: 0,
             level: 1,
             lines: 0,
-
-            das: 10.0 / 60.0,
-            arr: 1.0 / 60.0,
-            sdf: 1.0 / 60.0,
-
+            config,
             move_direction: 0,
             move_delay: 0.0,
             softdrop_delay: 0.0,
@@ -69,7 +63,7 @@ impl Core {
 
             if direction != 0 && self.move_direction != direction {
                 self.move_direction = direction;
-                self.move_delay = self.das;
+                self.move_delay = self.config.das;
 
                 piece.shift(&self.board, self.move_direction, 0);
             }
@@ -83,7 +77,7 @@ impl Core {
                 self.move_delay -= dt;
 
                 while self.move_delay <= 0.0 && piece.shift(&self.board, self.move_direction, 0) {
-                    self.move_delay += self.arr;
+                    self.move_delay += self.config.arr;
                 }
             }
 
@@ -93,15 +87,21 @@ impl Core {
                     self.score += 1;
                 }
 
-                self.softdrop_delay = self.sdf;
+                self.softdrop_delay = self.config.sdf;
             }
 
             if self.input.holded(InputType::SoftDrop) {
                 self.softdrop_delay -= dt;
 
-                while self.softdrop_delay <= 0.0 && piece.shift(&self.board, 0, -1) {
-                    self.score += 1;
-                    self.softdrop_delay += self.sdf;
+                while self.softdrop_delay <= 0.0 {
+                    if piece.shift(&self.board, 0, -1) {
+                        self.score += 1;
+                        self.softdrop_delay += self.config.sdf;
+                    } else {
+                        self.softdrop_delay = 0.0;
+
+                        break;
+                    }
                 }
             }
 
