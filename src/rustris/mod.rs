@@ -90,15 +90,18 @@ impl Rustris {
             }
         }
 
-        if let Some(piece) = &self.game.current_piece {
-            let mut ghost = piece.clone();
+        d.draw_rectangle(draw_left, draw_bottom + 10, ((1.0 - self.game.lock_delta) * (1.0 - self.game.lock_force_delta) * (CELL_SIZE * board_width) as f32) as i32, 10, Color::WHITE);
 
-            while ghost.shift(&self.game.board, 0, -1) {
+        if let Some(piece) = &self.game.current_piece {
+            let mut ghost_offset = 0;
+
+            while piece.test(&self.game.board, 0, ghost_offset - 1) {
+                ghost_offset -= 1;
             }
 
             for y in 0..4 {
                 for x in 0..4 {
-                    self.draw_block(d, draw_left, draw_bottom, x + ghost.x, y + ghost.y, ghost.get_block(x, y), 80);
+                    self.draw_block(d, draw_left, draw_bottom, x + piece.x, y + piece.y + ghost_offset, piece.get_block(x, y), 80);
                 }
             }
 

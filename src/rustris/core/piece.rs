@@ -125,18 +125,14 @@ impl Piece {
     }
 
     pub fn shift(&mut self, board: &Board, x: i32, y: i32) -> bool {
-        self.x += x;
-        self.y += y;
-
-        if !self.test(board) {
-            self.x -= x;
-            self.y -= y;
-
-            false
-        } else {
+        if self.test(board, x, y) {
+            self.x += x;
+            self.y += y;
             self.tspin_state = TSpinType::None;
 
             true
+        } else {
+            false
         }
     }
 
@@ -145,16 +141,14 @@ impl Piece {
             return true;
         }
 
-        let previous_x = self.x;
-        let previous_y = self.y;
-        let copied = self.blocks.clone();
+        let previous_blocks = self.blocks.clone();
 
         for y in 0..self.size.0 {
             for x in 0..self.size.1 {
                 if clockwise {
-                    self.blocks[self.size.0 - 1 - x][y] = copied[y][x];
+                    self.blocks[self.size.0 - 1 - x][y] = previous_blocks[y][x];
                 } else {
-                    self.blocks[x][self.size.1 - 1 - y] = copied[y][x];
+                    self.blocks[x][self.size.1 - 1 - y] = previous_blocks[y][x];
                 }
             }
         }
@@ -163,10 +157,9 @@ impl Piece {
         let kick_table = self.kicks[if clockwise { self.rotate_state * 2 } else { next_rotate_state * 2 + 1 } as usize];
 
         for i in 0..5 {
-            self.x = previous_x + kick_table[i].0;
-            self.y = previous_y + kick_table[i].1;
-
-            if self.test(board) {
+            if self.test(board, kick_table[i].0, kick_table[i].1) {
+                self.x += kick_table[i].0;
+                self.y += kick_table[i].1;    
                 self.rotate_state = next_rotate_state;
                 self.tspin_update(board);
 
@@ -174,9 +167,7 @@ impl Piece {
             }
         }
 
-        self.x = previous_x;
-        self.y = previous_y;
-        self.blocks = copied;
+        self.blocks = previous_blocks;
     
         false
     }
@@ -196,7 +187,7 @@ impl Piece {
 
         let next_rotate_state = (self.rotate_state + 2) % 4;
 
-        if self.test(board) {
+        if self.test(board, 0, 0) {
             self.rotate_state = next_rotate_state;
             self.tspin_update(board);
 
@@ -208,10 +199,10 @@ impl Piece {
         false
     }
 
-    pub fn test(&self, board: &Board) -> bool {
-        for y in 0..4 {
-            for x in 0..4 {
-                if self.get_block(x, y) != BlockType::Empty && board.get_block(self.x + x, self.y + y) != BlockType::Empty {
+    pub fn test(&self, board: &Board, x: i32, y: i32) -> bool {
+        for j in 0..4 {
+            for i in 0..4 {
+                if self.get_block(i, j) != BlockType::Empty && board.get_block(self.x + i + x, self.y + j + y) != BlockType::Empty {
                     return false;
                 }
             }
