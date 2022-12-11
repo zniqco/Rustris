@@ -86,11 +86,9 @@ impl Rustris {
 
         for y in 0..self.game.board.row_count() as i32 {
             for x in 0..board_width {
-                self.draw_block(d, draw_left, draw_bottom, x, y, self.game.board.get_block(x, y), 255);
+                self.draw_block(d, draw_left, draw_bottom, x, y, self.game.board.get_block(x, y), 255, 0.0);
             }
         }
-
-        d.draw_rectangle(draw_left, draw_bottom + 10, ((1.0 - self.game.lock_delta) * (1.0 - self.game.lock_force_delta) * (CELL_SIZE * board_width) as f32) as i32, 10, Color::WHITE);
 
         if let Some(piece) = &self.game.current_piece {
             let mut ghost_offset = 0;
@@ -101,13 +99,18 @@ impl Rustris {
 
             for y in 0..4 {
                 for x in 0..4 {
-                    self.draw_block(d, draw_left, draw_bottom, x + piece.x, y + piece.y + ghost_offset, piece.get_block(x, y), 80);
+                    self.draw_block(d, draw_left, draw_bottom, x + piece.x, y + piece.y + ghost_offset, piece.get_block(x, y), 80, 0.0);
                 }
             }
 
+            let floating = piece.test(&self.game.board, 0, -1);
+
             for y in 0..4 {
                 for x in 0..4 {
-                    self.draw_block(d, draw_left, draw_bottom, x + piece.x, y + piece.y, piece.get_block(x, y), 255);
+                    self.draw_block(d, draw_left, draw_bottom, x + piece.x, y + piece.y, piece.get_block(x, y), 255, match floating {
+                        true => 0.0,
+                        false => (1.0 - self.game.lock_delta) * (1.0 - self.game.lock_force_delta),
+                    });
                 }
             }
         }
@@ -141,18 +144,28 @@ impl Rustris {
         d.draw_text_right(format!("{}", self.game.score).as_str(), draw_left - 20, draw_top + 326, 40, Color::WHITE);
     }
 
-    fn draw_block(&self, d: &mut RaylibDrawHandle, left: i32, bottom: i32, x: i32, y: i32, block_type: BlockType, alpha: u8) {
+    fn draw_block(&self, d: &mut RaylibDrawHandle, left: i32, bottom: i32, x: i32, y: i32, block_type: BlockType, alpha: u8, flash: f32) {
         match block_type {
             BlockType::Empty | BlockType::Outside => { },
             _ => {
+                let draw_x = left + x * CELL_SIZE;
+                let draw_y = bottom - (y + 1) * CELL_SIZE;
+
                 if let Some(texture) = &self.blocks_texture {
                     d.draw_texture_pro(texture,
                         rrect(block_type as i32 * 30, 0, 30, 30),
-                        rrect(left + x * CELL_SIZE, bottom - (y + 1) * CELL_SIZE, CELL_SIZE, CELL_SIZE),
+                        rrect(draw_x, draw_y, CELL_SIZE, CELL_SIZE),
                         rvec2(0, 0),
                         0.0,
                         Color::new(255, 255, 255, alpha)
                     );
+                }
+
+                if flash > 0.0 {
+                    let mut blend_mode = d.begin_blend_mode(BlendMode::BLEND_ADDITIVE);
+                    let flash_power = (flash - 0.4).max(0.0) / 0.6;
+
+                    blend_mode.draw_rectangle(draw_x, draw_y, CELL_SIZE, CELL_SIZE, Color::new(255, 255, 255, (flash_power * 88.0) as u8));
                 }
             }
         }
