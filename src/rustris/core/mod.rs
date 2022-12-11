@@ -267,39 +267,23 @@ impl Core {
     }
 
     fn get_points(level: i32, lines: i32, cleared: bool, tspin_state: TSpinType) -> i32 {
-        return match tspin_state {
-            TSpinType::None => match lines {
-                1 => match cleared {
-                    true => 800,
-                    false => 100,
-                },
-                2 => match cleared {
-                    true => 1200,
-                    false => 300,
-                },
-                3 => match cleared {
-                    true => 1800,
-                    false => 500,
-                },
-                4 => match cleared {
-                    true => 2000,
-                    false => 800,
-                },
-                _ => 0,
-            },
-            TSpinType::Normal => match lines {
-                0 => 400,
-                1 => 800,
-                2 => 1200,
-                3 => 1600,
-                _ => 0,
-            },
-            TSpinType::Mini => match lines {
-                0 => 100,
-                1 => 200,
-                2 => 400,
-                _ => 0,
-            },
+        return match (lines, tspin_state, cleared) {
+            (1, TSpinType::None, true) => 800,
+            (1, TSpinType::None, false) => 100,
+            (2, TSpinType::None, true) => 1200,
+            (2, TSpinType::None, false) => 300,
+            (3, TSpinType::None, true) => 1800,
+            (3, TSpinType::None, false) => 500,
+            (4, TSpinType::None, true) => 2000,
+            (4, TSpinType::None, false) => 800,
+            (0, TSpinType::Normal, _) => 400,
+            (1, TSpinType::Normal, _) => 800,
+            (2, TSpinType::Normal, _) => 1200,
+            (3, TSpinType::Normal, _) => 1600,
+            (0, TSpinType::Mini, _) => 100,
+            (1, TSpinType::Mini, _) => 200,
+            (2, TSpinType::Mini, _) => 400,
+            _ => 0,
         } * level;
     }
 }
