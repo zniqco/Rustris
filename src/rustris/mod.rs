@@ -1,61 +1,57 @@
 mod core;
-mod raylib_extensions;
 
-use raylib::prelude::*;
+use std::default::Default;
+
+use macroquad::prelude::*;
+use macroquad::color::colors;
+use crate::exts::*;
+
 use self::core::*;
-use self::raylib_extensions::*;
 
 pub struct Rustris {
-    screen_width: i32,
-    screen_height: i32,
     game: Core,
-    background_texture: Option<Texture2D>,
-    blocks_texture: Option<Texture2D>,
+    background_texture: Texture2D,
+    blocks_texture: Texture2D,
+    font: Font,
 }
 
-const CELL_SIZE: i32 = 30;
-const PREVIEW_CELL_SIZE: i32 = 20;
+const CELL_SIZE: f32 = 30.0;
+const PREVIEW_CELL_SIZE: f32 = 20.0;
 
 impl Rustris {
-    pub fn new(screen_width: i32, screen_height: i32) -> Self {
+    pub fn new() -> Self {
         Self {
-            screen_width,
-            screen_height,
             game: Core::new(Config {
                 ..Default::default()
             }),
-            background_texture: None,
-            blocks_texture: None,
+            background_texture: Texture2D::from_file_with_format(include_bytes!("../../assets/background.png"), None),
+            blocks_texture: Texture2D::from_file_with_format(include_bytes!("../../assets/blocks.png"), None),
+            font: load_ttf_font_from_bytes(include_bytes!("../../assets/font.ttf")).unwrap(),
         }
     }
 
-    pub fn init(&mut self, rl: &mut RaylibHandle, rt: &RaylibThread) {
-        self.background_texture = rl.load_texture_from_bytes(rt, ".png", include_bytes!("..\\resources\\background.png"));
-        self.blocks_texture = rl.load_texture_from_bytes(rt, ".png", include_bytes!("..\\resources\\blocks.png"));
-    }
-
-    pub fn update(&mut self, rl: &mut RaylibHandle) {
-        self.game.input.set(InputType::MoveLeft, rl.is_key_down(KeyboardKey::KEY_LEFT));
-        self.game.input.set(InputType::MoveRight, rl.is_key_down(KeyboardKey::KEY_RIGHT));
-        self.game.input.set(InputType::SoftDrop, rl.is_key_down(KeyboardKey::KEY_DOWN));
-        self.game.input.set(InputType::HardDrop, rl.is_key_down(KeyboardKey::KEY_SPACE));
-        self.game.input.set(InputType::RotateCW, rl.is_key_down(KeyboardKey::KEY_UP) || rl.is_key_down(KeyboardKey::KEY_X));
-        self.game.input.set(InputType::RotateCCW, rl.is_key_down(KeyboardKey::KEY_Z));
-        self.game.input.set(InputType::Flip, rl.is_key_down(KeyboardKey::KEY_A));
-        self.game.input.set(InputType::Hold, rl.is_key_down(KeyboardKey::KEY_C));
+    pub fn update(&mut self) {
+        self.game.input.set(InputType::MoveLeft, is_key_down(KeyCode::Left));
+        self.game.input.set(InputType::MoveRight, is_key_down(KeyCode::Right));
+        self.game.input.set(InputType::SoftDrop, is_key_down(KeyCode::Down));
+        self.game.input.set(InputType::HardDrop, is_key_down(KeyCode::Space));
+        self.game.input.set(InputType::RotateCW, is_key_down(KeyCode::Up) || is_key_down(KeyCode::X));
+        self.game.input.set(InputType::RotateCCW, is_key_down(KeyCode::Z));
+        self.game.input.set(InputType::Flip, is_key_down(KeyCode::A));
+        self.game.input.set(InputType::Hold, is_key_down(KeyCode::C));
 
         // for Debug
-        let mouse_left = rl.is_mouse_button_down(MouseButton::MOUSE_LEFT_BUTTON);
-        let mouse_right = rl.is_mouse_button_down(MouseButton::MOUSE_RIGHT_BUTTON);
+        let mouse_left = is_mouse_button_down(MouseButton::Left);
+        let mouse_right = is_mouse_button_down(MouseButton::Right);
 
         if mouse_left || mouse_right {
-            let mouse_position = rl.get_mouse_position();
+            let mouse_position = mouse_position();
             let board_width = self.game.board.width() as i32;
             let board_height = self.game.board.height() as i32;
-            let board_x = (self.screen_width - CELL_SIZE * board_width) / 2;
-            let board_y = (self.screen_height + CELL_SIZE * board_height) / 2;
-            let grid_x = (mouse_position.x as i32 - board_x) / CELL_SIZE;
-            let grid_y = (board_y - mouse_position.y as i32) / CELL_SIZE;
+            let board_x = (screen_width() - CELL_SIZE * board_width as f32) / 2.0;
+            let board_y = (screen_height() + CELL_SIZE * board_height as f32) / 2.0;
+            let grid_x = ((mouse_position.0 - board_x) / CELL_SIZE).floor() as i32;
+            let grid_y = ((board_y - mouse_position.1) / CELL_SIZE).floor() as i32;
 
             if mouse_left {
                 self.game.board.set_block(grid_x, grid_y, BlockType::Green);
@@ -64,29 +60,30 @@ impl Rustris {
             }
         }
 
-        self.game.update(rl.get_frame_time());
+        self.game.update(get_frame_time());
     }
 
-    pub fn draw(&self, d: &mut RaylibDrawHandle) {
-        d.clear_background(Color::BLACK);
+    pub fn draw(&self) {
+        clear_background(colors::BLACK);
 
-        if let Some(texture) = &self.background_texture {
-            d.draw_texture(texture, 0, 0, Color::WHITE);
-        }
+        draw_texture_ex(self.background_texture, 0.0, 0.0, colors::WHITE, DrawTextureParams {
+            dest_size: Some(Vec2::new(screen_width(), screen_height())),
+            ..Default::default()
+        });
 
         let board_width = self.game.board.width() as i32;
         let board_height = self.game.board.height() as i32;
-        let draw_left = (self.screen_width - CELL_SIZE * board_width) / 2;
-        let draw_right = draw_left + CELL_SIZE * board_width;
-        let draw_bottom = (self.screen_height + CELL_SIZE * board_height) / 2;
-        let draw_top = draw_bottom - CELL_SIZE * board_height;
+        let draw_left = (screen_width() - CELL_SIZE * board_width as f32) / 2.0;
+        let draw_right = draw_left + CELL_SIZE * board_width as f32;
+        let draw_bottom = (screen_height() + CELL_SIZE * board_height as f32) / 2.0;
+        let draw_top = draw_bottom - CELL_SIZE * board_height as f32;
 
         // Board
-        self.draw_panel(d, draw_left, draw_top, board_width * CELL_SIZE, board_height * CELL_SIZE);
+        self.draw_panel(draw_left, draw_top, board_width as f32 * CELL_SIZE, board_height as f32 * CELL_SIZE);
 
         for y in 0..self.game.board.row_count() as i32 {
             for x in 0..board_width {
-                self.draw_block(d, draw_left, draw_bottom, x, y, self.game.board.get_block(x, y), 255, 0.0);
+                self.draw_block(draw_left, draw_bottom, x, y, self.game.board.get_block(x, y), 1.0, 0.0);
             }
         }
 
@@ -99,7 +96,7 @@ impl Rustris {
 
             for y in 0..4 {
                 for x in 0..4 {
-                    self.draw_block(d, draw_left, draw_bottom, x + piece.x, y + piece.y + ghost_offset, piece.get_block(x, y), 80, 0.0);
+                    self.draw_block(draw_left, draw_bottom, x + piece.x, y + piece.y + ghost_offset, piece.get_block(x, y), 0.3, 0.0);
                 }
             }
 
@@ -107,7 +104,7 @@ impl Rustris {
 
             for y in 0..4 {
                 for x in 0..4 {
-                    self.draw_block(d, draw_left, draw_bottom, x + piece.x, y + piece.y, piece.get_block(x, y), 255, match floating {
+                    self.draw_block(draw_left, draw_bottom, x + piece.x, y + piece.y, piece.get_block(x, y), 1.0, match floating {
                         true => 0.0,
                         false => (1.0 - self.game.lock_delta) * (1.0 - self.game.lock_force_delta),
                     });
@@ -116,94 +113,78 @@ impl Rustris {
         }
 
         // Hold
-        d.draw_text_right("Hold", draw_left - 20, draw_top, 20, Color::WHITE);
-        self.draw_panel(d, draw_left - 121, draw_top + 29, 102, 82);
+        draw_text_aligned("Hold", draw_left - 16.0, draw_top + 26.0, self.font, 24, 1.0, 0.5, colors::WHITE);
+        self.draw_panel(draw_left - 121.0, draw_top + 29.0, 102.0, 82.0);
 
         if let Some(hold_piece) = self.game.hold_piece {
-            self.draw_preview(d, draw_left - 70, draw_top + 70, hold_piece);
+            self.draw_preview(draw_left - 70.0, draw_top + 70.0, hold_piece);
         }
 
         // Next
-        d.draw_text("Next", draw_right + 20, draw_top, 20, Color::WHITE);
-        self.draw_panel(d, draw_right + 19, draw_top + 29, 102, 322);
+        draw_text_aligned("Next", draw_right + 16.0, draw_top + 26.0, self.font, 24, 0.0, 0.5, colors::WHITE);
+        self.draw_panel(draw_right + 19.0, draw_top + 29.0, 102.0, 322.0);
 
         for i in 0..5 {
-            self.draw_preview(d, draw_right + 70, draw_top + 70 + i * 60, self.game.bag.get(i));
+            self.draw_preview(draw_right + 70.0, draw_top + 70.0 + i as f32 * 60.0, self.game.bag.get(i));
         }
 
-        // Level
-        d.draw_text_right("Level", draw_left - 20, draw_top + 140, 20, Color::WHITE);
-        d.draw_text_right(format!("{}", self.game.level).as_str(), draw_left - 20, draw_top + 166, 40, Color::WHITE);
+        // Statuses
+        draw_text_aligned("Level", draw_left - 16.0, draw_top + 160.0, self.font, 24, 1.0, 0.5, colors::WHITE);
+        draw_text_aligned(self.game.level.to_string().as_str(), draw_left - 15.0, draw_top + 206.0, self.font, 42, 1.0, 0.5, colors::WHITE);
 
-        // Lines
-        d.draw_text_right("Lines", draw_left - 20, draw_top + 222, 20, Color::WHITE);
-        d.draw_text_right(format!("{}", self.game.lines).as_str(), draw_left - 20, draw_top + 246, 40, Color::WHITE);
+        draw_text_aligned("Lines", draw_left - 16.0, draw_top + 240.0, self.font, 24, 1.0, 0.5, colors::WHITE);
+        draw_text_aligned(self.game.lines.to_string().as_str(), draw_left - 15.0, draw_top + 286.0, self.font, 42, 1.0, 0.5, colors::WHITE);
 
-        // Score
-        d.draw_text_right("Score", draw_left - 20, draw_top + 300, 20, Color::WHITE);
-        d.draw_text_right(format!("{}", self.game.score).as_str(), draw_left - 20, draw_top + 326, 40, Color::WHITE);
+        draw_text_aligned("Score", draw_left - 16.0, draw_top + 320.0, self.font, 24, 1.0, 0.5, colors::WHITE);
+        draw_text_aligned(self.game.score.to_string().as_str(), draw_left - 15.0, draw_top + 366.0, self.font, 42, 1.0, 0.5, colors::WHITE);
     }
 
-    fn draw_block(&self, d: &mut RaylibDrawHandle, left: i32, bottom: i32, x: i32, y: i32, block_type: BlockType, alpha: u8, flash: f32) {
+    fn draw_block(&self, left: f32, bottom: f32, x: i32, y: i32, block_type: BlockType, alpha: f32, flash: f32) {
         match block_type {
             BlockType::Empty | BlockType::Outside => { },
             _ => {
-                let draw_x = left + x * CELL_SIZE;
-                let draw_y = bottom - (y + 1) * CELL_SIZE;
+                let draw_x = left + x as f32 * CELL_SIZE;
+                let draw_y = bottom - (y + 1) as f32 * CELL_SIZE;
 
-                if let Some(texture) = &self.blocks_texture {
-                    d.draw_texture_pro(texture,
-                        rrect(block_type as i32 * 30, 0, 30, 30),
-                        rrect(draw_x, draw_y, CELL_SIZE, CELL_SIZE),
-                        rvec2(0, 0),
-                        0.0,
-                        Color::new(255, 255, 255, alpha)
-                    );
-                }
+                draw_texture_ex(self.blocks_texture, draw_x, draw_y, Color::new(1.0, 1.0, 1.0, alpha), DrawTextureParams {
+                    dest_size: Some(Vec2::new(CELL_SIZE, CELL_SIZE)),
+                    source: Some(Rect::new(block_type as i32 as f32 * 30.0, 0.0, 30.0, 30.0)),
+                    ..Default::default()
+                });
 
                 if flash > 0.0 {
+                    /*
                     let mut blend_mode = d.begin_blend_mode(BlendMode::BLEND_ADDITIVE);
                     let flash_power = (flash - 0.4).max(0.0) / 0.6;
 
-                    blend_mode.draw_rectangle(draw_x, draw_y, CELL_SIZE, CELL_SIZE, Color::new(255, 255, 255, (flash_power * 88.0) as u8));
+                    blend_mode.draw_rectangle(draw_x, draw_y, CELL_SIZE, CELL_SIZE, Color::new(255, 255, 255, (flash_power * 88.0) as u8));*/
                 }
             }
         }
     }
 
-    fn draw_preview(&self, d: &mut RaylibDrawHandle, x: i32, y: i32, piece_type: PieceType) {
-        if let Some(texture) = &self.blocks_texture {
-            let array = match piece_type {
-                PieceType::Z => [(-1.0, -0.5), (0.0, -0.5), (0.0, 0.5), (1.0, 0.5)],
-                PieceType::S => [(1.0, -0.5), (0.0, -0.5), (0.0, 0.5), (-1.0, 0.5)],
-                PieceType::L => [(-1.0, 0.5), (0.0, 0.5), (1.0, 0.5), (1.0, -0.5)],
-                PieceType::J => [(-1.0, -0.5), (-1.0, 0.5), (0.0, 0.5), (1.0, 0.5)],
-                PieceType::I => [(-1.5, 0.0), (-0.5, 0.0), (0.5, 0.0), (1.5, 0.0)],
-                PieceType::O => [(-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)],
-                PieceType::T => [(-1.0, 0.5), (0.0, 0.5), (0.0, -0.5), (1.0, 0.5)],
-            };
+    fn draw_preview(&self, x: f32, y: f32, piece_type: PieceType) {
+        let array = match piece_type {
+            PieceType::Z => [(-1.0, -0.5), (0.0, -0.5), (0.0, 0.5), (1.0, 0.5)],
+            PieceType::S => [(1.0, -0.5), (0.0, -0.5), (0.0, 0.5), (-1.0, 0.5)],
+            PieceType::L => [(-1.0, 0.5), (0.0, 0.5), (1.0, 0.5), (1.0, -0.5)],
+            PieceType::J => [(-1.0, -0.5), (-1.0, 0.5), (0.0, 0.5), (1.0, 0.5)],
+            PieceType::I => [(-1.5, 0.0), (-0.5, 0.0), (0.5, 0.0), (1.5, 0.0)],
+            PieceType::O => [(-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)],
+            PieceType::T => [(-1.0, 0.5), (0.0, 0.5), (0.0, -0.5), (1.0, 0.5)],
+        };
 
-            for cell in array {
-                d.draw_texture_pro(texture,
-                    rrect(piece_type.get_block_type() as i32 * 30, 0, 30, 30),
-                    rrect(x + ((cell.0 - 0.5) * PREVIEW_CELL_SIZE as f32) as i32, y + ((cell.1 - 0.5) * PREVIEW_CELL_SIZE as f32) as i32, PREVIEW_CELL_SIZE, PREVIEW_CELL_SIZE),
-                    rvec2(0, 0),
-                    0.0,
-                    Color::WHITE
-                );
-            }
+        for cell in array {
+            draw_texture_ex(self.blocks_texture, x + ((cell.0 - 0.5) * PREVIEW_CELL_SIZE), y + ((cell.1 - 0.5) * PREVIEW_CELL_SIZE), colors::WHITE, DrawTextureParams {
+                dest_size: Some(Vec2::new(PREVIEW_CELL_SIZE, PREVIEW_CELL_SIZE)),
+                source: Some(Rect::new(piece_type.get_block_type() as i32 as f32 * 30.0, 0.0, 30.0, 30.0)),
+                ..Default::default()
+            });
         }
     }
 
-    fn draw_panel(&self, d: &mut RaylibDrawHandle, x: i32, y: i32, width: i32, height: i32) {
-        d.draw_rectangle_lines_ex(Rectangle {
-            x: (x - 2) as f32,
-            y: (y - 2) as f32,
-            width: (width + 4) as f32,
-            height: (height + 4) as f32
-        }, 2, Color::WHITE);
-
-        d.draw_rectangle(x, y, width, height, Color { r: 0, g: 0, b: 0, a: 224 });
-
+    fn draw_panel(&self, x: f32, y: f32, width: f32, height: f32) {
+        draw_rectangle_lines(x - 2.0, y - 2.0, width + 4.0, height + 4.0, 2.0, colors::WHITE);
+        draw_rectangle(x, y, width, height, Color::new(0.0, 0.0, 0.0, 0.875));
     }
 }

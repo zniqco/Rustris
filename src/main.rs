@@ -1,23 +1,31 @@
-//#![windows_subsystem = "windows"]
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod rustris;
+mod exts;
 
+use macroquad::prelude::*;
 use rustris::Rustris;
 
-const SCREEN_WIDTH: i32 = 1280;
-const SCREEN_HEIGHT: i32 = 720;
+#[macroquad::main(window_conf)]
+async fn main() {
+    let mut rustris = Rustris::new();
 
-fn main() {
-    let (mut rl, thread) = raylib::init()
-        .size(SCREEN_WIDTH, SCREEN_HEIGHT)
-        .title("Rustris")
-        .build();
+    loop {
+        rustris.update();
+        rustris.draw();
 
-    let mut rustris = Rustris::new(SCREEN_WIDTH, SCREEN_HEIGHT);
+        next_frame().await
+    }
+}
 
-    rustris.init(&mut rl, &thread);
-
-    while !rl.window_should_close() {
-        rustris.update(&mut rl);
-        rustris.draw(&mut rl.begin_drawing(&thread));
+fn window_conf() -> Conf {
+    Conf {
+        window_title: String::from("Rustris"),
+        window_width: 1280,
+        window_height: 720,
+        window_resizable: false,
+        sample_count: 1,
+        high_dpi: true,
+        icon: None,
+        ..Default::default()
     }
 }
