@@ -1,5 +1,3 @@
-use std::default::Default;
-
 use macroquad::prelude::*;
 use macroquad::color::colors;
 use crate::extension::*;
@@ -130,11 +128,13 @@ impl Rustris {
                 });
 
                 if flash > 0.0 {
-                    /*
-                    let mut blend_mode = d.begin_blend_mode(BlendMode::BLEND_ADDITIVE);
+                    gl_use_material(get_additive_material());
+
                     let flash_power = (flash - 0.4).max(0.0) / 0.6;
 
-                    blend_mode.draw_rectangle(draw_x, draw_y, CELL_SIZE, CELL_SIZE, Color::new(255, 255, 255, (flash_power * 88.0) as u8));*/
+                    draw_rectangle(draw_x, draw_y, CELL_SIZE, CELL_SIZE, Color::new(1.0, 1.0, 1.0, flash_power * 0.35));
+
+                    gl_use_default_material();
                 }
             }
         }
