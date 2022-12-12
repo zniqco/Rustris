@@ -42,6 +42,8 @@ pub struct Core {
     pub lock_force_delta: f32,
     level_data: LevelData,
     lines_offset: i32,
+    combo: i32,
+    b2b_combo: i32,
     game_over: bool,
 }
 
@@ -71,6 +73,8 @@ impl Core {
             lock_force_delta: 0.0,
             level_data: first_level,
             lines_offset: 0,
+            combo: 0,
+            b2b_combo: 0,
             game_over: false,
         }
     }
@@ -241,13 +245,33 @@ impl Core {
     
             let lines = self.board.process_lines();
             let cleared = self.board.is_cleared();
-            let points = Self::get_points(self.level, lines, cleared, piece.tspin_state);
+            let mut points_and_b2b = Self::get_points_and_b2b(self.level, lines, cleared, piece.tspin_state);
 
-            self.score += points;
+            if lines >= 1 {
+                if points_and_b2b.1 {
+                    self.b2b_combo += 1;
+    
+                    if self.b2b_combo >= 2 {
+                        points_and_b2b.0 = points_and_b2b.0 * 3 / 2;
+                    }
+                } else {
+                    self.b2b_combo = 0;
+                }
+
+                if self.combo > 0 {
+                    points_and_b2b.0 += 50 * self.combo * self.level;
+                }
+
+                self.combo += 1;
+            } else {
+                self.combo = 0;
+            }
+
+            self.score += points_and_b2b.0;
             self.lines += lines;
             
             if lines >= 1 || piece.tspin_state != TSpinType::None {
-                println!("points={}, lines={}, tspin={:?}", points, lines, piece.tspin_state);
+                println!("points={}, combo={}, b2b_combo={}, lines={}, tspin={:?}", points_and_b2b.0, self.combo, self.b2b_combo, lines, piece.tspin_state);
             }
 
             while self.level_data.lines > 0 && self.lines - self.lines_offset >= self.level_data.lines {
@@ -266,24 +290,24 @@ impl Core {
         }
     }
 
-    fn get_points(level: i32, lines: i32, cleared: bool, tspin_state: TSpinType) -> i32 {
+    fn get_points_and_b2b(level: i32, lines: i32, cleared: bool, tspin_state: TSpinType) -> (i32, bool) {
         return match (lines, tspin_state, cleared) {
-            (1, TSpinType::None, true) => 800,
-            (1, TSpinType::None, false) => 100,
-            (2, TSpinType::None, true) => 1200,
-            (2, TSpinType::None, false) => 300,
-            (3, TSpinType::None, true) => 1800,
-            (3, TSpinType::None, false) => 500,
-            (4, TSpinType::None, true) => 2000,
-            (4, TSpinType::None, false) => 800,
-            (0, TSpinType::Normal, _) => 400,
-            (1, TSpinType::Normal, _) => 800,
-            (2, TSpinType::Normal, _) => 1200,
-            (3, TSpinType::Normal, _) => 1600,
-            (0, TSpinType::Mini, _) => 100,
-            (1, TSpinType::Mini, _) => 200,
-            (2, TSpinType::Mini, _) => 400,
-            _ => 0,
-        } * level;
+            (1, TSpinType::None, true) => (800 * level, false),
+            (1, TSpinType::None, false) => (100 * level, false),
+            (2, TSpinType::None, true) => (1200 * level, false),
+            (2, TSpinType::None, false) => (300 * level, false),
+            (3, TSpinType::None, true) => (1800 * level, false),
+            (3, TSpinType::None, false) => (500 * level, false),
+            (4, TSpinType::None, true) => (2000 * level, true),
+            (4, TSpinType::None, false) => (800 * level, true),
+            (0, TSpinType::Normal, _) => (400 * level, false),
+            (1, TSpinType::Normal, _) => (800 * level, true),
+            (2, TSpinType::Normal, _) => (1200 * level, true),
+            (3, TSpinType::Normal, _) => (1600 * level, true),
+            (0, TSpinType::Mini, _) => (100 * level, false),
+            (1, TSpinType::Mini, _) => (200 * level, true),
+            (2, TSpinType::Mini, _) => (400 * level, true),
+            _ => (0, false),
+        };
     }
 }
