@@ -88,7 +88,7 @@ impl Rustris {
         }
 
         // Hold
-        draw_text_aligned("Hold", draw_left - 16.0, draw_top + 26.0, self.font, 24, 1.0, 0.5, colors::WHITE);
+        draw_text_aligned("Hold", draw_left - 16.0, draw_top - 1.0, self.font, 22, 1.0, 0.0, colors::WHITE);
         self.draw_panel(draw_left - 121.0, draw_top + 29.0, 102.0, 82.0);
 
         if let Some(hold_piece) = self.session.hold_piece {
@@ -96,7 +96,7 @@ impl Rustris {
         }
 
         // Next
-        draw_text_aligned("Next", draw_right + 16.0, draw_top + 26.0, self.font, 24, 0.0, 0.5, colors::WHITE);
+        draw_text_aligned("Next", draw_right + 16.0, draw_top - 1.0, self.font, 22, 0.0, 0.0, colors::WHITE);
         self.draw_panel(draw_right + 19.0, draw_top + 29.0, 102.0, 322.0);
 
         for i in 0..5 {
@@ -104,14 +104,16 @@ impl Rustris {
         }
 
         // Statuses
-        draw_text_aligned("Level", draw_left - 16.0, draw_top + 160.0, self.font, 24, 1.0, 0.5, colors::WHITE);
-        draw_text_aligned(self.session.level.to_string().as_str(), draw_left - 15.0, draw_top + 206.0, self.font, 42, 1.0, 0.5, colors::WHITE);
+        draw_text_aligned("Level", draw_left - 16.0, draw_top + 136.0, self.font, 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.level.to_string().as_str(), draw_left - 15.0, draw_top + 166.0, self.font, 42, 1.0, 0.0, colors::WHITE);
 
-        draw_text_aligned("Lines", draw_left - 16.0, draw_top + 240.0, self.font, 24, 1.0, 0.5, colors::WHITE);
-        draw_text_aligned(self.session.lines.to_string().as_str(), draw_left - 15.0, draw_top + 286.0, self.font, 42, 1.0, 0.5, colors::WHITE);
+        draw_text_aligned("Lines", draw_left - 16.0, draw_top + 216.0, self.font, 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.lines.to_string().as_str(), draw_left - 15.0, draw_top + 246.0, self.font, 42, 1.0, 0.0, colors::WHITE);
 
-        draw_text_aligned("Score", draw_left - 16.0, draw_top + 320.0, self.font, 24, 1.0, 0.5, colors::WHITE);
-        draw_text_aligned(self.session.score.to_string().as_str(), draw_left - 15.0, draw_top + 366.0, self.font, 42, 1.0, 0.5, colors::WHITE);
+        draw_text_aligned("Score", draw_left - 16.0, draw_top + 296.0, self.font, 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.score.to_string().as_str(), draw_left - 15.0, draw_top + 326.0, self.font, 42, 1.0, 0.0, colors::WHITE);
+
+        draw_text_aligned(get_fps().to_string().as_str(), screen_width() - 12.0, 12.0, self.font, 14, 1.0, 0.0, colors::WHITE);
     }
 
     fn draw_block(&self, left: f32, bottom: f32, x: i32, y: i32, block_type: BlockType, alpha: f32, flash: f32) {
