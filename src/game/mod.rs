@@ -22,7 +22,7 @@ use piece::*;
 use row::*;
 use tspin_type::*;
 
-pub struct Core {
+pub struct Game {
     pub config: Config,
     pub board: Board,
     pub bag: Bag,
@@ -47,7 +47,7 @@ pub struct Core {
     game_over: bool,
 }
 
-impl Core {
+impl Game {
     pub fn new(config: Config) -> Self {
         let width = config.width;
         let height = config.height;

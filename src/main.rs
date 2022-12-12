@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod rustris;
-mod exts;
+mod game;
+mod extension;
 
 use macroquad::prelude::*;
 use rustris::Rustris;
