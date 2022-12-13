@@ -79,6 +79,16 @@ impl Board {
         }
     }
 
+    pub fn grayize(&mut self) {
+        for y in 0..self.rows.len() as i32 {
+            for x in 0..self.width as i32 {
+                if self.rows[y as usize].cells[x as usize] != BlockType::Empty {
+                    self.rows[y as usize].cells[x as usize] = BlockType::Gray;
+                }
+            }
+        }
+    }
+
     fn trim(&mut self) {
         for i in (0..self.rows.len()).rev() {
             if self.rows[i].is_empty() {

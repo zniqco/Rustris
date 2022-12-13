@@ -1,5 +1,6 @@
-use super::*;
 use rand::prelude::*;
+use crate::extension::get_timestamp;
+use super::*;
 
 const MINIMUM_COUNT: usize = 7;
 
@@ -14,7 +15,7 @@ impl Bag {
             pieces: Vec::new(),
             rng: StdRng::seed_from_u64(match seed {
                 Some(x) => x,
-                None => Self::get_timestamp(),
+                None => get_timestamp(),
             }),
         };
 
@@ -57,9 +58,5 @@ impl Bag {
 
             self.pieces.append(&mut next);
         }
-    }
-
-    fn get_timestamp() -> u64 {
-        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64
     }
 }

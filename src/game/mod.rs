@@ -100,17 +100,14 @@ impl Game {
 
                     if new_piece.test(&self.board, 0, 0) {
                         self.current_piece = Some(new_piece);
+                    } else if new_piece.test(&self.board, 0, 1) {
+                        new_piece.y += 1;
+
+                        self.current_piece = Some(new_piece);
                     } else {
                         new_piece.place(&mut self.board);
 
-                        for y in 0..self.board.row_count() as i32 {
-                            for x in 0..self.board.width() as i32 {
-                                if self.board.get_block(x, y) != BlockType::Empty {
-                                    self.board.set_block(x, y, BlockType::Gray);
-                                }
-                            }
-                        }
-
+                        self.board.grayize();
                         self.game_over = true;
 
                         break 'inner;

@@ -4,33 +4,11 @@ use macroquad::miniquad::*;
 pub fn get_additive_material() -> Material {
     static mut MATERIAL: Option<Material> = None;
 
-    const DEFAULT_VERTEX: &str = r#"#version 100
-attribute vec3 position;
-attribute vec2 texcoord;
-attribute vec4 color0;
-varying lowp vec2 uv;
-varying lowp vec4 color;
-uniform mat4 Model;
-uniform mat4 Projection;
-void main() {
-    gl_Position = Projection * Model * vec4(position, 1);
-    uv = texcoord;
-    color = color0 / 255.0;
-}"#;
-
-    const DEFAULT_FRAGMENT: &str = r#"#version 100
-varying lowp vec2 uv;
-varying lowp vec4 color;
-uniform sampler2D Texture;
-void main() {
-    gl_FragColor = color * texture2D(Texture, uv);
-}"#;
-
     unsafe {
         if let None = MATERIAL {
             let material = load_material(
-                DEFAULT_VERTEX,
-                DEFAULT_FRAGMENT,
+                include_str!("default.vert"),
+                include_str!("default.frag"),
                 MaterialParams {
                     pipeline_params: PipelineParams {
                         color_blend: Some(BlendState::new(
