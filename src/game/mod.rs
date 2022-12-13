@@ -32,7 +32,7 @@ pub struct Game {
     pub level: i32,
     pub lines: i32,
     pub hold_piece: Option<PieceType>,
-    hold_enabled: bool,
+    pub hold_enabled: bool,
     move_direction: i32,
     move_delay: f32,
     softdrop_delay: f32,
@@ -112,6 +112,11 @@ impl Game {
 
                         break 'inner;
                     }
+
+                    self.gravity_delta = 0.0;
+                    self.lock_delta = 0.0;
+                    self.lock_force_delta = 0.0;
+                    self.lock_enabled = false;
                 }
             }
 
@@ -280,10 +285,6 @@ impl Game {
             self.current_piece = None;
             self.hold_enabled = true;
             self.move_delay = 0.0;
-            self.gravity_delta = 0.0;
-            self.lock_delta = 0.0;
-            self.lock_force_delta = 0.0;
-            self.lock_enabled = false;
         }
     }
 

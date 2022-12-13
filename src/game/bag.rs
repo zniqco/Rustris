@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use crate::extension::get_timestamp;
+use crate::utility::get_timestamp;
 use super::*;
 
 const MINIMUM_COUNT: usize = 7;

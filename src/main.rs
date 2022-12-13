@@ -1,10 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-mod rustris;
 mod game;
-mod extension;
+mod rustris;
+mod utility;
 
 use macroquad::prelude::*;
-use rustris::Rustris;
+use rustris::*;
 
 #[macroquad::main(window_conf)]
 async fn main() {
