@@ -46,12 +46,18 @@ impl Rustris {
             ..Default::default()
         });
 
+        // Scale matrix
+        let scale = screen_height() / 720.0;
+
+        push_matrix_trs(screen_width() * 0.5, screen_height() * 0.5, 0.0, scale, scale);
+
+        // Positions
         let board_width = self.session.board.width() as i32;
         let board_height = self.session.board.height() as i32;
-        let draw_left = (screen_width() - CELL_SIZE * board_width as f32) / 2.0;
-        let draw_right = draw_left + CELL_SIZE * board_width as f32;
-        let draw_bottom = (screen_height() + CELL_SIZE * board_height as f32) / 2.0;
-        let draw_top = draw_bottom - CELL_SIZE * board_height as f32;
+        let draw_left = CELL_SIZE * board_width as f32 * -0.5;
+        let draw_right = CELL_SIZE * board_width as f32 * 0.5;
+        let draw_bottom = CELL_SIZE * board_height as f32 * 0.5;
+        let draw_top = CELL_SIZE * board_height as f32 * -0.5;
 
         // Board
         draw_panel(draw_left, draw_top, board_width as f32 * CELL_SIZE, board_height as f32 * CELL_SIZE);
@@ -129,6 +135,8 @@ impl Rustris {
 
         draw_text_aligned("Score", draw_left - 16.0, draw_top + 296.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
         draw_text_aligned(self.session.score.to_string().as_str(), draw_left - 15.0, draw_top + 326.0, *DEFAULT_FONT, 42, 1.0, 0.0, colors::WHITE);
+
+        pop_matrix();
 
         draw_text_aligned(get_fps().to_string().as_str(), screen_width() - 12.0, 12.0, *DEFAULT_FONT, 14, 1.0, 0.0, colors::WHITE);
     }

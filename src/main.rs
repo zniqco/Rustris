@@ -23,7 +23,7 @@ fn window_conf() -> Conf {
         window_title: String::from("Rustris"),
         window_width: 1280,
         window_height: 720,
-        window_resizable: false,
+        window_resizable: true,
         sample_count: 1,
         high_dpi: true,
         icon: None,

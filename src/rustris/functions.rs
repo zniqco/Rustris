@@ -53,6 +53,16 @@ pub fn draw_panel(x: f32, y: f32, width: f32, height: f32) {
     draw_rectangle(x, y, width, height, Color::new(0.0, 0.0, 0.0, 0.875));
 }
 
+pub fn push_matrix_trs(x: f32, y: f32, deg: f32, scale_x: f32, scale_y: f32) {
+    unsafe {
+        get_internal_gl().quad_gl.push_model_matrix(Mat4::from_scale_rotation_translation(
+            Vec3::new(scale_x, scale_y, 1.0),
+            Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, deg / 180.0 * PI),
+            Vec3::new(x, y, 1.0)
+        ));
+    }
+}
+
 pub fn push_matrix_scale(x: f32, y: f32) {
     unsafe {
         get_internal_gl().quad_gl.push_model_matrix(Mat4::from_scale(Vec3::new(x, y, 1.0)));
