@@ -9,6 +9,7 @@ lto = true
 
 [dependencies]
 rand = "0.8.5"
+simple-easing = "1.0.0"
 macroquad = "0.3.25"
 
 [dependencies.lazy_static]

@@ -1,5 +1,6 @@
 use std::f32::consts::PI;
 use macroquad::prelude::*;
+use crate::game::*;
 use super::*;
 
 pub fn draw_text_aligned(text: &str, x: f32, y: f32, font: Font, font_size: u16, pivot_x: f32, pivot_y: f32, color: Color) {

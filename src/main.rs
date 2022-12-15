@@ -4,17 +4,16 @@ mod rustris;
 mod utility;
 
 use macroquad::prelude::*;
-use rustris::*;
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut rustris = Rustris::new();
+    rustris::init();
 
     loop {
-        rustris.update();
-        rustris.draw();
+        rustris::update();
+        rustris::draw();
 
-        next_frame().await
+        next_frame().await;
     }
 }
 
@@ -24,7 +23,7 @@ fn window_conf() -> Conf {
         window_width: 1280,
         window_height: 720,
         window_resizable: true,
-        sample_count: 1,
+        sample_count: 0,
         high_dpi: true,
         icon: None,
         ..Default::default()
