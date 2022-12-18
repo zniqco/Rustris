@@ -57,20 +57,21 @@ impl Game {
         }
     }
 
-    pub fn update(&mut self, dt: f32) {
+    pub fn update(&mut self, dt: f32) -> Vec<EventType> {
+        let mut events = Vec::new();
+
         'inner: loop {
             if !self.game_over {
                 if self.input.pressed(InputType::Hold) && self.hold_enabled {
-                    if let Some(hold_piece) = self.hold_piece {
-                        self.bag.push_front(hold_piece);
-                    }
-
                     if let Some(piece) = &mut self.current_piece {
+                        if let Some(hold_piece) = self.hold_piece {
+                            self.bag.push_front(hold_piece);
+                        }
+
                         self.hold_piece = Some(piece.piece_type);
                         self.current_piece = None;
+                        self.hold_enabled = false;
                     }
-
-                    self.hold_enabled = false;
                 }
 
                 if let None = &self.current_piece {
@@ -109,6 +110,10 @@ impl Game {
 
                     if piece.shift(&self.board, self.move_direction, 0) {
                         self.lock_delta = 0.0;
+
+                        if self.lock_enabled && !piece.test(&self.board, 0, -1) {
+                            events.push(EventType::LockReset);
+                        }
                     }
                 }
                 
@@ -118,11 +123,28 @@ impl Game {
                 }
 
                 if self.move_direction != 0 {
+                    let mut moved = false;
+
                     self.move_delay -= dt;
 
-                    while self.move_delay <= 0.0 && piece.shift(&self.board, self.move_direction, 0) {
-                        self.move_delay += self.config.arr;
+                    while self.move_delay <= 0.0 {
+                        if piece.shift(&self.board, self.move_direction, 0) {
+                            self.move_delay += self.config.arr;
+
+                            moved = true;
+                        } else {
+                            self.move_delay = 0.0;
+
+                            break;
+                        }
+                    }
+
+                    if moved {
                         self.lock_delta = 0.0;
+
+                        if self.lock_enabled && !piece.test(&self.board, 0, -1) {
+                            events.push(EventType::LockReset);
+                        }
                     }
                 }
 
@@ -145,7 +167,7 @@ impl Game {
                     self.lock_delta += dt / self.level_data.lock_delay;
 
                     if self.lock_delta >= 1.0 || self.lock_force_delta >= 1.0 {
-                        self.place_piece();
+                        events.append(&mut self.place_piece());
 
                         break 'inner;
                     }
@@ -186,18 +208,30 @@ impl Game {
                 if self.input.pressed(InputType::RotateCW) {
                     if piece.rotate(&self.board, true) {
                         self.lock_delta = 0.0;
+
+                        if self.lock_enabled && !piece.test(&self.board, 0, -1) {
+                            events.push(EventType::LockReset);
+                        }
                     }
                 }
 
                 if self.input.pressed(InputType::RotateCCW) {
                     if piece.rotate(&self.board, false) {
                         self.lock_delta = 0.0;
+
+                        if self.lock_enabled && !piece.test(&self.board, 0, -1) {
+                            events.push(EventType::LockReset);
+                        }
                     }
                 }
 
                 if self.input.pressed(InputType::Flip) {
                     if piece.flip(&self.board) {
                         self.lock_delta = 0.0;
+
+                        if self.lock_enabled && !piece.test(&self.board, 0, -1) {
+                            events.push(EventType::LockReset);
+                        }
                     }
                 }
 
@@ -207,9 +241,7 @@ impl Game {
                         self.score += 1;
                     }
 
-                    self.place_piece();
-
-                    break 'inner;
+                    events.append(&mut self.place_piece());
                 }
             }
 
@@ -217,9 +249,13 @@ impl Game {
         }
 
         self.input.update();
+
+        events
     }
 
-    fn place_piece(&mut self) {
+    fn place_piece(&mut self) -> Vec<EventType> {
+        let mut events = Vec::new();
+
         if let Some(piece) = &mut self.current_piece {
             piece.place(&mut self.board);
     
@@ -251,7 +287,12 @@ impl Game {
             self.lines += lines;
             
             if lines >= 1 || piece.tspin_state != TSpinType::None {
-                println!("points={}, combo={}, b2b_combo={}, lines={}, tspin={:?}", points_and_b2b.0, self.combo, self.b2b_combo, lines, piece.tspin_state);
+                events.push(EventType::Pointed {
+                    score: points_and_b2b.0,
+                    combo: self.combo,
+                    lines,
+                    tspin: piece.tspin_state
+                });
             }
 
             while self.level_data.lines > 0 && self.lines - self.lines_offset >= self.level_data.lines {
@@ -264,6 +305,8 @@ impl Game {
             self.hold_enabled = true;
             self.move_delay = 0.0;
         }
+
+        events
     }
 
     fn get_points_and_b2b(level: i32, lines: i32, cleared: bool, tspin_state: TSpinType) -> (i32, bool) {

@@ -20,7 +20,7 @@ enum InternalScene {
     Ingame(Ingame),
 }
 
-static mut current_scene: InternalScene = InternalScene::None;
+static mut CURRENT_SCENE: InternalScene = InternalScene::None;
 
 pub fn init() {
     init_resources();
@@ -29,7 +29,7 @@ pub fn init() {
 
 pub fn update() {
     unsafe {
-        match &mut current_scene {
+        match &mut CURRENT_SCENE {
             InternalScene::Menu(x) => x.update(),
             InternalScene::Ingame(x) => x.update(),
             _ => { },
@@ -46,7 +46,7 @@ pub fn draw() {
     });
 
     unsafe {
-        match &current_scene {
+        match &CURRENT_SCENE {
             InternalScene::Menu(x) => x.draw(),
             InternalScene::Ingame(x) => x.draw(),
             _ => { },
@@ -59,9 +59,9 @@ pub fn draw() {
 pub fn set_scene(scene: Scene) {
     unsafe {
         match scene {
-            Scene::None => current_scene = InternalScene::None,
-            Scene::Menu => current_scene = InternalScene::Menu(Menu::new()),
-            Scene::Ingame => current_scene = InternalScene::Ingame(Ingame::new()),
+            Scene::None => CURRENT_SCENE = InternalScene::None,
+            Scene::Menu => CURRENT_SCENE = InternalScene::Menu(Menu::new()),
+            Scene::Ingame => CURRENT_SCENE = InternalScene::Ingame(Ingame::new()),
         }
     }
 }

@@ -14,4 +14,3 @@ macroquad = "0.3.25"
 
 [dependencies.lazy_static]
 version = "1.4.0"
-features = ["spin_no_std"]
