@@ -112,16 +112,21 @@ impl Piece {
         self.blocks[y as usize][x as usize]
     }
 
-    pub fn place(&mut self, board: &mut Board) {
+    pub fn place(&mut self, board: &mut Board) -> Vec<(i32, i32)> {
+        let mut positions = vec![];
+
         for y in 0..4 {
             for x in 0..4 {
                 let block = self.get_block(x, y);
 
                 if block != BlockType::Empty {
                     board.set_block(self.x + x, self.y + y, block);
+                    positions.push((self.x + x, self.y + y));
                 }
             }
         }
+
+        positions
     }
 
     pub fn shift(&mut self, board: &Board, x: i32, y: i32) -> bool {

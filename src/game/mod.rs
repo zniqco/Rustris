@@ -24,4 +24,4 @@ pub use level_data::*;
 pub use piece_type::*;
 use piece::*;
 use row::*;
-use tspin_type::*;
+pub use tspin_type::*;

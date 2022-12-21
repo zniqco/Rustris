@@ -1,7 +1,7 @@
 use macroquad::prelude::*;
 use macroquad::color::colors;
 use crate::game::*;
-use super::super::*;
+use super::*;
 
 const CELL_SIZE: f32 = 30.0;
 const PREVIEW_CELL_SIZE: f32 = 20.0;
@@ -30,7 +30,25 @@ impl Ingame {
         }
     }
 
-    pub fn update(&mut self) {
+    fn get_draw_left(&self) -> f32 {
+        CELL_SIZE * self.session.board.width() as f32 * -0.5
+    }
+
+    fn get_draw_right(&self) -> f32 {
+        CELL_SIZE * self.session.board.width() as f32 * 0.5
+    }
+
+    fn get_draw_top(&self) -> f32 {
+        CELL_SIZE * self.session.board.height() as f32 * -0.5
+    }
+
+    fn get_draw_bottom(&self) -> f32 {
+        CELL_SIZE * self.session.board.height() as f32 * 0.5
+    }
+}
+
+impl Object for Ingame {
+    fn update(&mut self) {
         let dt = get_frame_time();
 
         self.state_time += dt;
@@ -54,8 +72,49 @@ impl Ingame {
 
                 for event in self.session.update(dt) {
                     match event {
-                        EventType::Pointed { score, lines, combo, tspin } => {
-                            println!("Pointed (score={}, lines={}, combo={}, tspin={:?})", score, lines, combo, tspin);
+                        EventType::Pointed { score, lines, combo, b2b, tspin } => {
+                            println!("Pointed (score={}, lines={}, combo={}, b2b={}, tspin={:?})", score, lines, combo, b2b, tspin);
+
+                            let draw_right = self.get_draw_right();
+                            let draw_bottom = self.get_draw_bottom();
+
+                            let message = String::from(match (b2b, lines, tspin) {
+                                (false, 1, TSpinType::None) => "Single",
+                                (false, 2, TSpinType::None) => "Double",
+                                (false, 3, TSpinType::None) => "Triple",
+                                (false, 4, TSpinType::None) => "Tetris",
+                                (false, 0, TSpinType::Normal) => "T-Spin",
+                                (false, 1, TSpinType::Normal) => "T-Spin Single",
+                                (false, 2, TSpinType::Normal) => "T-Spin Double",
+                                (false, 3, TSpinType::Normal) => "T-Spin Triple",
+                                (false, 0, TSpinType::Mini) => "T-Spin Mini",
+                                (false, 1, TSpinType::Mini) => "T-Spin Mini Single",
+                                (false, 2, TSpinType::Mini) => "T-Spin Mini Double",
+                                (true, 4, TSpinType::None) => "B2B Tetris",
+                                (true, 1, TSpinType::Normal) => "B2B T-Spin Single",
+                                (true, 2, TSpinType::Normal) => "B2B T-Spin Double",
+                                (true, 3, TSpinType::Normal) => "B2B T-Spin Triple",
+                                (true, 1, TSpinType::Mini) => "B2B T-Spin Mini Single",
+                                (true, 2, TSpinType::Mini) => "B2B T-Spin Mini Double",
+                                _ => "",
+                            });
+
+                            let sub_message = match combo {
+                                _ if combo >= 2 => format!("{} combo", combo),
+                                _ => String::new(),
+                            };
+
+                            object_add(ObjectType::PointMessage(PointMessage::new(draw_right + 16.0, draw_bottom, message, sub_message)));
+                        },
+                        EventType::Placed { positions } => {
+                            let draw_left = self.get_draw_left();
+                            let draw_bottom = self.get_draw_bottom();
+
+                            for position in positions {
+                                let draw_position = get_block_position(draw_left, draw_bottom, position.0, position.1, CELL_SIZE);
+
+                                object_add(ObjectType::PlaceEffect(PlaceEffect::new(draw_position.0, draw_position.1, CELL_SIZE as f32, CELL_SIZE as f32)));
+                            }
                         },
                         _ => { }
                     }
@@ -64,22 +123,18 @@ impl Ingame {
         }
     }
 
-    pub fn draw(&self) {
+    fn draw(&self) {
         // Scale matrix
-        let scale = screen_height() / 720.0;
-
-        push_matrix_trs(screen_width() * 0.5, screen_height() * 0.5, 0.0, simple_easing::bounce_out(self.board_scale) * scale, scale);
+        push_matrix_trs(0.0, 0.0, 0.0, simple_easing::bounce_out(self.board_scale), 1.0);
 
         // Positions
-        let board_width = self.session.board.width() as i32;
-        let board_height = self.session.board.height() as i32;
-        let draw_left = CELL_SIZE * board_width as f32 * -0.5;
-        let draw_right = CELL_SIZE * board_width as f32 * 0.5;
-        let draw_bottom = CELL_SIZE * board_height as f32 * 0.5;
-        let draw_top = CELL_SIZE * board_height as f32 * -0.5;
+        let draw_left = self.get_draw_left();
+        let draw_right = self.get_draw_right();
+        let draw_bottom = self.get_draw_bottom();
+        let draw_top = self.get_draw_top();
 
         // Board
-        draw_panel(draw_left, draw_top, board_width as f32 * CELL_SIZE, board_height as f32 * CELL_SIZE);
+        draw_panel(draw_left, draw_top, draw_right - draw_left, draw_bottom - draw_top);
 
         match self.state {
             State::Ready => {
@@ -87,7 +142,7 @@ impl Ingame {
             },
             State::Ingame => {
                 for y in 0..self.session.board.row_count() as i32 {
-                    for x in 0..board_width {
+                    for x in 0..self.session.board.width() as i32 {
                         let position = get_block_position(draw_left, draw_bottom, x, y, CELL_SIZE);
         
                         draw_block(position.0, position.1, CELL_SIZE, self.session.board.get_block(x, y), 1.0);

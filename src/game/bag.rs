@@ -1,5 +1,4 @@
 use rand::prelude::*;
-use crate::utility::get_timestamp;
 use super::*;
 
 const MINIMUM_COUNT: usize = 7;
@@ -10,13 +9,10 @@ pub struct Bag {
 }
 
 impl Bag {
-    pub fn new(seed: Option<u64>) -> Self {
+    pub fn new(seed: u64) -> Self {
         let mut instance = Self {
             pieces: Vec::new(),
-            rng: StdRng::seed_from_u64(match seed {
-                Some(x) => x,
-                None => get_timestamp(),
-            }),
+            rng: StdRng::seed_from_u64(seed),
         };
 
         instance.fill_to_minimum();

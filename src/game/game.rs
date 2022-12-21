@@ -30,11 +30,15 @@ impl Game {
         let width = config.width;
         let height = config.height;
         let first_level = config.levels[0];
+        let seed = match config.seed {
+            Some(x) => x,
+            None => std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64,
+        };
 
         Self {
             config: config,
             board: Board::new(width, height),
-            bag: Bag::new(None),
+            bag: Bag::new(seed),
             current_piece: None,
             input: Input::new(),
             score: 0,
@@ -257,11 +261,12 @@ impl Game {
         let mut events = Vec::new();
 
         if let Some(piece) = &mut self.current_piece {
-            piece.place(&mut self.board);
-    
+            let placed = piece.place(&mut self.board);
             let lines = self.board.process_lines();
             let cleared = self.board.is_cleared();
             let mut points_and_b2b = Self::get_points_and_b2b(self.level, lines, cleared, piece.tspin_state);
+
+            events.push(EventType::Placed { positions: placed });
 
             if lines >= 1 {
                 if points_and_b2b.1 {
@@ -291,7 +296,8 @@ impl Game {
                     score: points_and_b2b.0,
                     combo: self.combo,
                     lines,
-                    tspin: piece.tspin_state
+                    b2b: self.b2b_combo >= 2,
+                    tspin: piece.tspin_state,
                 });
             }
 

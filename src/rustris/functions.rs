@@ -1,4 +1,3 @@
-use std::f32::consts::PI;
 use macroquad::prelude::*;
 use crate::game::*;
 use super::*;
@@ -50,15 +49,15 @@ pub fn draw_preview(x: f32, y: f32, cell_size: f32, piece_type: PieceType, alpha
 }
 
 pub fn draw_panel(x: f32, y: f32, width: f32, height: f32) {
-    draw_rectangle_lines(x - 2.0, y - 2.0, width + 4.0, height + 4.0, 3.0, colors::WHITE);
+    draw_rectangle_lines(x - 2.0, y - 2.0, width + 4.0, height + 4.0, 3.0, Color::from_rgba(255, 255, 255, 255));
     draw_rectangle(x, y, width, height, Color::new(0.0, 0.0, 0.0, 0.875));
 }
 
 pub fn push_matrix_trs(x: f32, y: f32, deg: f32, scale_x: f32, scale_y: f32) {
     unsafe {
         get_internal_gl().quad_gl.push_model_matrix(Mat4::from_scale_rotation_translation(
-            Vec3::new(scale_x, scale_y, 1.0),
-            Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, deg / 180.0 * PI),
+            Vec3::new(scale_x, scale_y, 0.0),
+            Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, deg / 180.0 * std::f32::consts::PI),
             Vec3::new(x, y, 1.0)
         ));
     }

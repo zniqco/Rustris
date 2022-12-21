@@ -7,6 +7,7 @@ pub struct Config {
     pub sdf: f32,
     pub width: usize,
     pub height: usize,
+    pub seed: Option<u64>,
     pub levels: Vec<LevelData>,
 }
 
@@ -18,6 +19,7 @@ impl Default for Config {
             sdf: 1.0 / 60.0,
             width: 10,
             height: 20,
+            seed: None,
             levels: vec![
                 LevelData { gravity: 0.01667, lock_delay: 1.0, lines: 10 },
                 LevelData { gravity: 0.021017, lock_delay: 0.97, lines: 10 },
