@@ -22,16 +22,10 @@ impl PlaceEffect {
 }
 
 impl Object for PlaceEffect {
-    fn should_destroy(&self) -> bool {
-        self.alpha <= 0.0
-    }
-
-    fn depth(&self) -> i32 {
-        -1
-    }
-
-    fn update(&mut self) {
+    fn update(&mut self) -> Vec<ObjectEvent> {
         self.alpha -= get_frame_time() / 0.05;
+
+        vec![]
     }
 
     fn draw(&self) {

@@ -1,5 +1,19 @@
 use super::*;
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum BlockType {
+    Empty = -2,
+    Outside = -1,
+    Red = 0,
+    Orange,
+    Yellow,
+    Green,
+    Cyan,
+    Blue,
+    Purple,
+    Gray,
+}
+
 pub struct Board {
     rows: Vec<Row>,
     width: usize,
@@ -15,7 +29,7 @@ impl Board {
         }
     }
 
-    pub fn get_block(&self, x: i32, y: i32) -> BlockType {
+    pub fn get(&self, x: i32, y: i32) -> BlockType {
         if x < 0 || y < 0 || x >= self.width as i32 {
             return BlockType::Outside;
         }
@@ -27,7 +41,7 @@ impl Board {
         self.rows[y as usize].cells[x as usize]
     }
 
-    pub fn set_block(&mut self, x: i32, y: i32, block: BlockType) {
+    pub fn set(&mut self, x: i32, y: i32, block: BlockType) {
         if x < 0 || y < 0 || x >= self.width as i32 || block == BlockType::Outside {
             return;
         }

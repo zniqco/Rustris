@@ -12,10 +12,6 @@ impl Background {
 }
 
 impl Object for Background {
-    fn depth(&self) -> i32 {
-        10000
-    }
-
     fn draw(&self) {
         let width = screen_width() as f32;
         let height = 720.0;

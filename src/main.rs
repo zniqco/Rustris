@@ -3,14 +3,17 @@ mod game;
 mod rustris;
 
 use macroquad::prelude::*;
+use rustris::*;
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    rustris::init();
+    let mut rustris = Rustris::new();
+
+    rustris.init();
 
     loop {
-        rustris::update();
-        rustris::draw();
+        rustris.update();
+        rustris.draw();
 
         next_frame().await;
     }

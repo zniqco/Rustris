@@ -1,5 +1,4 @@
 use std::default::Default;
-use super::*;
 
 pub struct Config {
     pub das: f32,
@@ -7,7 +6,7 @@ pub struct Config {
     pub sdf: f32,
     pub width: usize,
     pub height: usize,
-    pub seed: Option<u64>,
+    pub seed: u64,
     pub levels: Vec<LevelData>,
 }
 
@@ -19,7 +18,7 @@ impl Default for Config {
             sdf: 1.0 / 60.0,
             width: 10,
             height: 20,
-            seed: None,
+            seed: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64,
             levels: vec![
                 LevelData { gravity: 0.01667, lock_delay: 1.0, lines: 10 },
                 LevelData { gravity: 0.021017, lock_delay: 0.97, lines: 10 },
@@ -42,6 +41,23 @@ impl Default for Config {
                 LevelData { gravity: 20.0, lock_delay: 0.46, lines: 10 },
                 LevelData { gravity: 20.0, lock_delay: 0.43, lines: 0 },
             ]
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct LevelData {
+    pub gravity: f32,
+    pub lock_delay: f32,
+    pub lines: i32,
+}
+
+impl Default for LevelData {
+    fn default() -> Self {
+        Self {
+            gravity: 0.0,
+            lock_delay: 1000.0,
+            lines: 0, // 0 = Infinity
         }
     }
 }

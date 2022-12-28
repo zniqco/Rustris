@@ -1,132 +1,105 @@
 use super::*;
 
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum PieceType {
+    Z,
+    L,
+    O,
+    S,
+    I,
+    J,
+    T,
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum TSpinType {
+    None,
+    Normal,
+    Mini,
+}
+
 #[derive(Clone)]
 pub struct Piece {
-    size: (usize, usize),
-    blocks: [[BlockType; 4]; 4],
-    kicks: [[(i32, i32); 5]; 8],
+    piece_data: &'static PieceData,
+    kick_data: &'static KickData,
+    size: (i32, i32),
     rotate_state: i32,
-    
-    pub piece_type: PieceType,
-    pub x: i32,
-    pub y: i32,
-    pub tspin_state: TSpinType,
+    x: i32,
+    y: i32,
+    piece_type: PieceType,
+    block_type: BlockType,
+    tspin_state: TSpinType,
 }
 
 impl Piece {
-    pub fn new(piece_type: PieceType, board_width: usize, board_height: usize) -> Self {
-        let block_type = piece_type.get_block_type();
-
-        let blocks = match piece_type {
-            PieceType::Z => [
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, block_type, block_type, BlockType::Empty],
-                [block_type, block_type, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-            ],
-            PieceType::L => [
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [block_type, block_type, block_type, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, block_type, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-            ],
-            PieceType::O => [
-                [BlockType::Empty, block_type, block_type, BlockType::Empty],
-                [BlockType::Empty, block_type, block_type, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-            ],
-            PieceType::S => [
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [block_type, block_type, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, block_type, block_type, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-            ],
-            PieceType::I => [
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [block_type, block_type, block_type, block_type],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-            ],
-            PieceType::J => [
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [block_type, block_type, block_type, BlockType::Empty],
-                [block_type, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-            ],
-            PieceType::T => [
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-                [block_type, block_type, block_type, BlockType::Empty],
-                [BlockType::Empty, block_type, BlockType::Empty, BlockType::Empty],
-                [BlockType::Empty, BlockType::Empty, BlockType::Empty, BlockType::Empty],
-            ],
-        };
-
-        let size = match piece_type {
-            PieceType::Z => (3, 3),
-            PieceType::L => (3, 3),
-            PieceType::O => (4, 2),
-            PieceType::S => (3, 3),
-            PieceType::I => (4, 4),
-            PieceType::J => (3, 3),
-            PieceType::T => (3, 3),
-        };
-
-        let kicks = match piece_type {
-            PieceType::Z | PieceType::S | PieceType::L | PieceType::J | PieceType::T => [
-                [(0, 0), (-1, 0), (-1, 1), (0, -2), (-1, -2)],
-                [(0, 0), (1, 0), (1, -1), (0, 2), (1, 2)],
-                [(0, 0), (1, 0), (1, -1), (0, 2), (1, 2)],
-                [(0, 0), (-1, 0), (-1, 1), (0, -2), (-1, -2)],
-                [(0, 0), (1, 0), (1, 1), (0, -2), (1, -2)],
-                [(0, 0), (-1, 0), (-1, -1), (0, 2), (-1, 2)],
-                [(0, 0), (-1, 0), (-1, -1), (0, 2), (-1, 2)],
-                [(0, 0), (1, 0), (1, 1), (0, -2), (1, -2)],
-            ],
-            PieceType::I => [
-                [(0, 0), (-2, 0), (1, 0), (-2, -1), (1, 2)],
-                [(0, 0), (2, 0), (-1, 0), (2, 1), (-1, -2)],
-                [(0, 0), (-1, 0), (2, 0), (-1, 2), (2, -1)],
-                [(0, 0), (1, 0), (-2, 0), (1, -2), (-2, 1)],
-                [(0, 0), (2, 0), (-1, 0), (2, 1), (-1, -2)],
-                [(0, 0), (-2, 0), (1, 0), (-2, -1), (1, 2)],
-                [(0, 0), (1, 0), (-2, 0), (1, -2), (-2, 1)],
-                [(0, 0), (-1, 0), (2, 0), (-1, 2), (2, -1)],
-            ],
-            _ => [[(0, 0); 5]; 8],
-        };
+    pub fn new(rotation: &RotationType, piece: PieceType, board_width: usize, board_height: usize) -> Self {
+        let piece_data = rotation.blocks(piece);
+        let kick_data = rotation.kicks(piece);
+        let size = (piece_data.shape[0][0].len() as i32, piece_data.shape[0].len() as i32);
 
         Self {
-            blocks,
+            piece_data,
+            kick_data,
             size,
-            kicks,
             rotate_state: 0,
-            piece_type,
-            x: board_width as i32 / 2 - 2,
-            y: board_height as i32 + 1 - size.1 as i32,
+            x: board_width as i32 / 2 + piece_data.spawn_offset.0,
+            y: board_height as i32 + piece_data.spawn_offset.1,
+            piece_type: piece,
+            block_type: piece_data.block,
             tspin_state: TSpinType::None,
         }
     }
 
-    pub fn get_block(&self, x: i32, y: i32) -> BlockType {
-        self.blocks[y as usize][x as usize]
+    pub fn width(&self) -> i32 {
+        self.size.0
     }
 
-    pub fn place(&mut self, board: &mut Board) -> Vec<(i32, i32)> {
-        let mut positions = vec![];
+    pub fn height(&self) -> i32 {
+        self.size.1
+    }
 
-        for y in 0..4 {
-            for x in 0..4 {
-                let block = self.get_block(x, y);
+    pub fn rotate_state(&self) -> i32 {
+        self.rotate_state
+    }
+
+    pub fn x(&self) -> i32 {
+        self.x
+    }
+
+    pub fn y(&self) -> i32 {
+        self.y
+    }
+
+    pub fn piece_type(&self) -> PieceType {
+        self.piece_type
+    }
+
+    pub fn block_type(&self) -> BlockType {
+        self.block_type
+    }
+
+    pub fn tspin_state(&self) -> TSpinType {
+        self.tspin_state
+    }
+
+    pub fn block_at(&self, x: i32, y: i32) -> BlockType {
+        if self.piece_data.shape[self.rotate_state as usize][(self.size.1 - y - 1) as usize][x as usize] == 1 {
+            self.block_type
+        } else {
+            BlockType::Empty
+        }
+    }
+
+    pub fn place(&mut self, board: &mut Board) {
+        for y in 0..self.size.1 {
+            for x in 0..self.size.0 {
+                let block = self.block_at(x, y);
 
                 if block != BlockType::Empty {
-                    board.set_block(self.x + x, self.y + y, block);
-                    positions.push((self.x + x, self.y + y));
+                    board.set(self.x + x, self.y + y, block);
                 }
             }
         }
-
-        positions
     }
 
     pub fn shift(&mut self, board: &Board, x: i32, y: i32) -> bool {
@@ -142,72 +115,21 @@ impl Piece {
     }
 
     pub fn rotate(&mut self, board: &Board, clockwise: bool) -> bool {
-        if self.size.0 != self.size.1 {
-            return true;
+        if clockwise {
+            self.add_state(board, 1)
+        } else {
+            self.add_state(board, 3)
         }
-
-        let previous_blocks = self.blocks.clone();
-
-        for y in 0..self.size.0 {
-            for x in 0..self.size.1 {
-                if clockwise {
-                    self.blocks[self.size.0 - 1 - x][y] = previous_blocks[y][x];
-                } else {
-                    self.blocks[x][self.size.1 - 1 - y] = previous_blocks[y][x];
-                }
-            }
-        }
-
-        let next_rotate_state = (self.rotate_state + if clockwise { 1 } else { 3 }) % 4;
-        let kick_table = self.kicks[if clockwise { self.rotate_state * 2 } else { next_rotate_state * 2 + 1 } as usize];
-
-        for i in 0..5 {
-            if self.test(board, kick_table[i].0, kick_table[i].1) {
-                self.x += kick_table[i].0;
-                self.y += kick_table[i].1;    
-                self.rotate_state = next_rotate_state;
-                self.tspin_update(board);
-
-                return true;
-            }
-        }
-
-        self.blocks = previous_blocks;
-    
-        false
     }
     
     pub fn flip(&mut self, board: &Board) -> bool {
-        if self.size.0 != self.size.1 {
-            return true;
-        }
-
-        let copied = self.blocks.clone();
-
-        for y in 0..self.size.0 {
-            for x in 0..self.size.1 {
-                self.blocks[self.size.0 - 1 - y][self.size.1 - 1 - x] = copied[y][x];
-            }
-        }
-
-        let next_rotate_state = (self.rotate_state + 2) % 4;
-
-        if self.test(board, 0, 0) {
-            self.rotate_state = next_rotate_state;
-            self.tspin_update(board);
-
-            return true;
-        }
-
-        self.blocks = copied;
-    
-        false
+        self.add_state(board, 2)
     }
 
     pub fn test(&self, board: &Board, x: i32, y: i32) -> bool {
-        for j in 0..4 {
-            for i in 0..4 {
-                if self.get_block(i, j) != BlockType::Empty && board.get_block(self.x + i + x, self.y + j + y) != BlockType::Empty {
+        for j in 0..self.size.1 {
+            for i in 0..self.size.0 {
+                if self.block_at(i, j) != BlockType::Empty && board.get(self.x + i + x, self.y + j + y) != BlockType::Empty {
                     return false;
                 }
             }
@@ -216,13 +138,39 @@ impl Piece {
         true
     }
 
+    fn add_state(&mut self, board: &Board, state_offset: i32) -> bool {
+        let previous_rotate_state = self.rotate_state;
+        let kick_table = match state_offset {
+            1 => self.kick_data.cw,
+            3 => self.kick_data.ccw,
+            2 => self.kick_data.flip,
+            _ => panic!()
+        }[self.rotate_state as usize];
+
+        self.rotate_state = (self.rotate_state + state_offset) % 4;
+
+        for i in 0..kick_table.len() {
+            if self.test(board, kick_table[i].0, kick_table[i].1) {
+                self.x += kick_table[i].0;
+                self.y += kick_table[i].1;    
+                self.tspin_update(board);
+
+                return true;
+            }
+        }
+
+        self.rotate_state = previous_rotate_state;
+
+        false
+    }
+
     fn tspin_update(&mut self, board: &Board) {
         if self.piece_type == PieceType::T {
             let corner_states = [
-                if board.get_block(self.x, self.y + 2) != BlockType::Empty { 1 } else { 0 },
-                if board.get_block(self.x + 2, self.y + 2) != BlockType::Empty { 1 } else { 0 },
-                if board.get_block(self.x + 2, self.y) != BlockType::Empty { 1 } else { 0 },
-                if board.get_block(self.x, self.y) != BlockType::Empty { 1 } else { 0 },
+                if board.get(self.x, self.y + 2) != BlockType::Empty { 1 } else { 0 },
+                if board.get(self.x + 2, self.y + 2) != BlockType::Empty { 1 } else { 0 },
+                if board.get(self.x + 2, self.y) != BlockType::Empty { 1 } else { 0 },
+                if board.get(self.x, self.y) != BlockType::Empty { 1 } else { 0 },
             ];
 
             if corner_states[0] + corner_states[1] + corner_states[2] + corner_states[3] >= 3 {

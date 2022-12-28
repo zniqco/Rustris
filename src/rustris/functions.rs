@@ -15,7 +15,7 @@ pub fn draw_text_aligned(text: &str, x: f32, y: f32, font: Font, font_size: u16,
     });
 }
 
-pub fn get_block_position(board_x: f32, board_y: f32, x: i32, y: i32, cell_size: f32) -> (f32, f32) {
+pub fn calc_block_position(board_x: f32, board_y: f32, x: i32, y: i32, cell_size: f32) -> (f32, f32) {
     (board_x + x as f32 * cell_size, board_y - (y + 1) as f32 * cell_size)
 }
 
@@ -32,19 +32,17 @@ pub fn draw_block(x: f32, y: f32, cell_size: f32, block_type: BlockType, alpha: 
     }
 }
 
-pub fn draw_preview(x: f32, y: f32, cell_size: f32, piece_type: PieceType, alpha: f32) {
-    let array = match piece_type {
-        PieceType::Z => [(-1.0, -0.5), (0.0, -0.5), (0.0, 0.5), (1.0, 0.5)],
-        PieceType::S => [(1.0, -0.5), (0.0, -0.5), (0.0, 0.5), (-1.0, 0.5)],
-        PieceType::L => [(-1.0, 0.5), (0.0, 0.5), (1.0, 0.5), (1.0, -0.5)],
-        PieceType::J => [(-1.0, -0.5), (-1.0, 0.5), (0.0, 0.5), (1.0, 0.5)],
-        PieceType::I => [(-1.5, 0.0), (-0.5, 0.0), (0.5, 0.0), (1.5, 0.0)],
-        PieceType::O => [(-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)],
-        PieceType::T => [(-1.0, 0.5), (0.0, 0.5), (0.0, -0.5), (1.0, 0.5)],
-    };
+pub fn draw_preview(x: f32, y: f32, cell_size: f32, rotation: &RotationType, piece: PieceType, alpha: f32) {
+    let piece_data = rotation.blocks(piece);
+    let size = (piece_data.shape[0][0].len() as i32, piece_data.shape[0].len() as i32);
+    let offset = (size.0 as f32 * -0.5 + piece_data.preview_offset.0, size.1 as f32 * -0.5 + piece_data.preview_offset.1);
 
-    for cell in array {
-        draw_block(x + ((cell.0 - 0.5) * cell_size), y + ((cell.1 - 0.5) * cell_size), cell_size, piece_type.get_block_type(), alpha);
+    for j in 0..size.1 as usize {
+        for i in 0..size.0 as usize {
+            if piece_data.shape[0][j][i] == 1 {
+                draw_block(x + (i as f32 + offset.0) * cell_size, y + (j as f32 + offset.1) * cell_size, cell_size, piece_data.block, alpha);
+            }
+        }
     }
 }
 
@@ -66,5 +64,13 @@ pub fn push_matrix_trs(x: f32, y: f32, deg: f32, scale_x: f32, scale_y: f32) {
 pub fn pop_matrix() {
     unsafe {
         get_internal_gl().quad_gl.pop_model_matrix();
+    }
+}
+
+pub fn inverse_lerp(a: f32, b: f32, v: f32) -> f32 {
+	if a == b {
+		0.0
+    } else {
+	    clamp((v - a) / (b - a), 0.0, 1.0)
     }
 }

@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+
 use super::*;
 
 pub struct Menu {
@@ -14,18 +15,19 @@ impl Menu {
 }
 
 impl Object for Menu {
-    fn should_destroy(&self) -> bool {
-        self.is_destroyed
-    }
+    fn update(&mut self) -> Vec<ObjectEvent> {
+        let mut events = vec![];
 
-    fn update(&mut self) {
-        if !self.is_destroyed {
-            if is_key_down(KeyCode::Enter) {
-                object_add(ObjectType::Ingame(Ingame::new()));
-                
-                self.is_destroyed = true;
-            }
+        if is_key_down(KeyCode::Enter) {
+            events.push(ObjectEvent::Create { 
+                depth: 0,
+                object: Ingame::new().into()
+            });
+            
+            events.push(ObjectEvent::Destroy);
         }
+
+        events
     }
 
     fn draw(&self) {
