@@ -7,7 +7,7 @@ lazy_static! {
 
     pub static ref BLOCKS_TEXTURE: Texture2D = Texture2D::from_file_with_format(include_bytes!("../../assets/blocks.png"), None);
 
-    pub static ref DEFAULT_FONT: Font = load_ttf_font_from_bytes(include_bytes!("../../assets/font.ttf")).unwrap();
+    pub static ref DEFAULT_FONT: Font = load_ttf_font_from_bytes(include_bytes!("../../assets/font.otf")).unwrap();
 
     pub static ref ADDITIVE_MATERIAL: Material = load_material(
         include_str!("../../assets/default.vert"),

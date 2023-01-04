@@ -15,6 +15,10 @@ async fn main() {
         rustris.update();
         rustris.draw();
 
+        if rustris.quitted() {
+            break;
+        }
+
         next_frame().await;
     }
 }

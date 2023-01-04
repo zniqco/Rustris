@@ -1,6 +1,12 @@
+use std::sync::Mutex;
+use lazy_static::lazy_static;
 use macroquad::prelude::*;
 use crate::game::*;
 use super::*;
+
+lazy_static! {
+    static ref QUITTED: Mutex<bool> = Mutex::new(false);
+}
 
 pub fn draw_text_aligned(text: &str, x: f32, y: f32, font: Font, font_size: u16, pivot_x: f32, pivot_y: f32, color: Color) {
     let font_scale = 1.0;
@@ -14,6 +20,35 @@ pub fn draw_text_aligned(text: &str, x: f32, y: f32, font: Font, font_size: u16,
         ..Default::default()
     });
 }
+
+/*pub fn draw_text_bitmap(text: &str, x: f32, y: f32, scale: f32, pivot_x: f32, pivot_y: f32, color: Color) {
+    let size = measure_text_bitmap(text, x, y, scale);
+    let mut draw_x = x - size.0 * pivot_x;
+    let mut draw_y = y - size.1 * pivot_y;
+
+    for i in text.as_bytes() {
+        if *i >= 32 && *i <= 127 {
+            draw_texture_ex(*FONT_TEXTURE, draw_x, draw_y, color, DrawTextureParams {
+                dest_size: Some(Vec2::new(8.0 * scale, 8.0 * scale)),
+                source: Some(Rect::new((*i - 32) as f32 * 8.0, 0.0, 8.0, 8.0)),
+                ..Default::default()
+            });
+        }
+
+        draw_x += 8.0 * scale;
+    }
+}
+
+pub fn measure_text_bitmap(text: &str, x: f32, y: f32, scale: f32) -> (f32, f32) {
+    let mut width = 0.0;
+    let mut height = 8.0;
+
+    for i in text.as_bytes() {
+        width += 8.0 * scale;
+    }
+
+    (width, height)
+}*/
 
 pub fn calc_block_position(board_x: f32, board_y: f32, x: i32, y: i32, cell_size: f32) -> (f32, f32) {
     (board_x + x as f32 * cell_size, board_y - (y + 1) as f32 * cell_size)
@@ -65,6 +100,14 @@ pub fn pop_matrix() {
     unsafe {
         get_internal_gl().quad_gl.pop_model_matrix();
     }
+}
+
+pub fn quit() {
+    *QUITTED.lock().unwrap() = true;
+}
+
+pub fn quitted() -> bool {
+    *QUITTED.lock().unwrap()
 }
 
 pub fn inverse_lerp(a: f32, b: f32, v: f32) -> f32 {

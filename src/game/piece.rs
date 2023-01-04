@@ -114,16 +114,16 @@ impl Piece {
         }
     }
 
-    pub fn rotate(&mut self, board: &Board, clockwise: bool) -> bool {
-        if clockwise {
-            self.add_state(board, 1)
-        } else {
-            self.add_state(board, 3)
-        }
+    pub fn cw(&mut self, board: &Board) -> bool {
+        self.rotate(board, 1)
     }
-    
+
+    pub fn ccw(&mut self, board: &Board) -> bool {
+        self.rotate(board, 3)
+    }
+
     pub fn flip(&mut self, board: &Board) -> bool {
-        self.add_state(board, 2)
+        self.rotate(board, 2)
     }
 
     pub fn test(&self, board: &Board, x: i32, y: i32) -> bool {
@@ -138,7 +138,7 @@ impl Piece {
         true
     }
 
-    fn add_state(&mut self, board: &Board, state_offset: i32) -> bool {
+    fn rotate(&mut self, board: &Board, state_offset: i32) -> bool {
         let previous_rotate_state = self.rotate_state;
         let kick_table = match state_offset {
             1 => self.kick_data.cw,

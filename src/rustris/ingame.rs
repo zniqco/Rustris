@@ -85,28 +85,28 @@ impl Object for Ingame {
                             let draw_top = self.draw_top();
 
                             let message = String::from(match (b2b, lines, tspin) {
-                                (false, 1, TSpinType::None) => "Single",
-                                (false, 2, TSpinType::None) => "Double",
-                                (false, 3, TSpinType::None) => "Triple",
-                                (false, 4, TSpinType::None) => "Tetris",
-                                (false, 1, TSpinType::Normal) => "T-Spin Single",
-                                (false, 2, TSpinType::Normal) => "T-Spin Double",
-                                (false, 3, TSpinType::Normal) => "T-Spin Triple",
-                                (false, 1, TSpinType::Mini) => "T-Spin Mini Single",
-                                (false, 2, TSpinType::Mini) => "T-Spin Mini Double",
-                                (true, 4, TSpinType::None) => "B2B Tetris",
-                                (true, 1, TSpinType::Normal) => "B2B T-Spin Single",
-                                (true, 2, TSpinType::Normal) => "B2B T-Spin Double",
-                                (true, 3, TSpinType::Normal) => "B2B T-Spin Triple",
-                                (true, 1, TSpinType::Mini) => "B2B T-Spin Mini Single",
-                                (true, 2, TSpinType::Mini) => "B2B T-Spin Mini Double",
-                                (_, 0, TSpinType::Normal) => "T-Spin",
-                                (_, 0, TSpinType::Mini) => "T-Spin Mini",
+                                (false, 1, TSpinType::None) => "SINGLE",
+                                (false, 2, TSpinType::None) => "DOUBLE",
+                                (false, 3, TSpinType::None) => "TRIPLE",
+                                (false, 4, TSpinType::None) => "QUAD",
+                                (false, 1, TSpinType::Normal) => "T-SPIN SINGLE",
+                                (false, 2, TSpinType::Normal) => "T-SPIN DOUBLE",
+                                (false, 3, TSpinType::Normal) => "T-SPIN TRIPLE",
+                                (false, 1, TSpinType::Mini) => "T-SPIN MINI SINGLE",
+                                (false, 2, TSpinType::Mini) => "T-SPIN MINI DOUBLE",
+                                (true, 4, TSpinType::None) => "B2B QUAD",
+                                (true, 1, TSpinType::Normal) => "B2B T-SPIN SINGLE",
+                                (true, 2, TSpinType::Normal) => "B2B T-SPIN DOUBLE",
+                                (true, 3, TSpinType::Normal) => "B2B T-SPIN TRIPLE",
+                                (true, 1, TSpinType::Mini) => "B2B T-SPIN MINI SINGLE",
+                                (true, 2, TSpinType::Mini) => "B2B T-SPIN MINI DOUBLE",
+                                (_, 0, TSpinType::Normal) => "T-SPIN",
+                                (_, 0, TSpinType::Mini) => "T-SPIN MINI",
                                 _ => "",
                             });
 
                             let sub_message = match combo {
-                                _ if combo >= 2 => format!("{} combo", combo),
+                                _ if combo >= 2 => format!("{} COMBO", combo),
                                 _ => String::new(),
                             };
 
@@ -155,7 +155,7 @@ impl Object for Ingame {
 
         match self.state {
             State::Ready => {
-                draw_text_aligned("Ready?", (draw_left + draw_right) * 0.5, (draw_top + draw_bottom) * 0.5, *DEFAULT_FONT, 42, 0.5, 0.5, colors::WHITE);
+                draw_text_aligned("READY?", (draw_left + draw_right) * 0.5, (draw_top + draw_bottom) * 0.5, *DEFAULT_FONT, 38, 0.5, 0.5, colors::WHITE);
             },
             State::Ingame => {
                 for y in 0..self.session.board.row_count() as i32 {
@@ -206,7 +206,7 @@ impl Object for Ingame {
         }
         
         // Hold
-        draw_text_aligned("Hold", draw_left - 16.0, draw_top - 1.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned("HOLD", draw_left - 16.0, draw_top - 1.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
         draw_panel(draw_left - 121.0, draw_top + 29.0, 102.0, 82.0);
 
         if let Some(hold_piece) = self.session.hold_piece {
@@ -217,7 +217,7 @@ impl Object for Ingame {
         }
 
         // Next
-        draw_text_aligned("Next", draw_right + 16.0, draw_top - 1.0, *DEFAULT_FONT, 22, 0.0, 0.0, colors::WHITE);
+        draw_text_aligned("NEXT", draw_right + 16.0, draw_top - 1.0, *DEFAULT_FONT, 22, 0.0, 0.0, colors::WHITE);
         draw_panel(draw_right + 19.0, draw_top + 29.0, 102.0, 322.0);
 
         for i in 0..5 {
@@ -225,14 +225,14 @@ impl Object for Ingame {
         }
 
         // Statuses
-        draw_text_aligned("Level", draw_left - 16.0, draw_top + 136.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
-        draw_text_aligned(self.session.level.to_string().as_str(), draw_left - 15.0, draw_top + 166.0, *DEFAULT_FONT, 42, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned("LEVEL", draw_left - 16.0, draw_top + 136.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.level.to_string().as_str(), draw_left - 15.0, draw_top + 166.0, *DEFAULT_FONT, 38, 1.0, 0.0, colors::WHITE);
 
-        draw_text_aligned("Lines", draw_left - 16.0, draw_top + 216.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
-        draw_text_aligned(self.session.lines.to_string().as_str(), draw_left - 15.0, draw_top + 246.0, *DEFAULT_FONT, 42, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned("LINES", draw_left - 16.0, draw_top + 216.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.lines.to_string().as_str(), draw_left - 15.0, draw_top + 246.0, *DEFAULT_FONT, 38, 1.0, 0.0, colors::WHITE);
 
-        draw_text_aligned("Score", draw_left - 16.0, draw_top + 296.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
-        draw_text_aligned(self.session.score.to_string().as_str(), draw_left - 15.0, draw_top + 326.0, *DEFAULT_FONT, 42, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned("SCORE", draw_left - 16.0, draw_top + 296.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.score.to_string().as_str(), draw_left - 15.0, draw_top + 326.0, *DEFAULT_FONT, 38, 1.0, 0.0, colors::WHITE);
 
         pop_matrix();
     }

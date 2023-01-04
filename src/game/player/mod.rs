@@ -3,6 +3,7 @@ mod user;
 pub use user::*;
 
 use enum_dispatch::enum_dispatch;
+use super::*;
 
 #[enum_dispatch]
 pub trait Player {

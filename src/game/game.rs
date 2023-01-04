@@ -24,6 +24,7 @@ pub struct Game {
     move_direction: i32,
     move_delay: f32,
     softdrop_delay: f32,
+    softdroping: bool,
     gravity_delta: f32,
     lock_enabled: bool,
     pub lock_delta: f32,
@@ -49,7 +50,7 @@ impl Game {
             lines: 0,
             current_piece: None,
             bag: Vec::new(),
-            player: ColdClear::new(),
+            player: User::new(),
             randomizer: SingleBag::new(seed),
             rotation: SRS::new(),
             hold_piece: None,
@@ -57,6 +58,7 @@ impl Game {
             move_direction: 0,
             move_delay: 0.0,
             softdrop_delay: 0.0,
+            softdroping: false,
             gravity_delta: 0.0,
             lock_enabled: false,
             lock_delta: 0.0,
@@ -83,7 +85,7 @@ impl Game {
                 if self.player.hold() && self.hold_enabled {
                     if let Some(piece) = &mut self.current_piece {
                         if let Some(hold_piece) = self.hold_piece {
-                            self.bag.insert(self.bag.len(), hold_piece);
+                            self.bag.insert(0, hold_piece);
                         }
 
                         self.hold_piece = Some(piece.piece_type());
@@ -199,8 +201,12 @@ impl Game {
 
                 // Soft drop
                 if self.player.soft_drop() {
-                    self.softdrop_delay -= dt;
-                    self.gravity_delta = 0.0;
+                    if self.softdroping {
+                        self.softdrop_delay -= dt;
+                    } else {
+                        self.softdrop_delay = 0.0;
+                        self.softdroping = true;
+                    }
 
                     while self.softdrop_delay <= 0.0 {
                         if piece.shift(&self.board, 0, -1) {
@@ -214,12 +220,12 @@ impl Game {
                         }
                     }
                 } else {
-                    self.softdrop_delay = 0.0;
+                    self.softdroping = false;
                 }
 
                 // Rotate
                 if self.player.cw() {
-                    if piece.rotate(&self.board, true) {
+                    if piece.cw(&self.board) {
                         self.lock_delta = 0.0;
 
                         if self.lock_enabled && !piece.test(&self.board, 0, -1) {
@@ -229,7 +235,7 @@ impl Game {
                 }
 
                 if self.player.ccw() {
-                    if piece.rotate(&self.board, false) {
+                    if piece.ccw(&self.board) {
                         self.lock_delta = 0.0;
 
                         if self.lock_enabled && !piece.test(&self.board, 0, -1) {

@@ -33,6 +33,10 @@ impl User {
         instance.into()
     }
 
+    fn holded(&self, index: usize) -> bool {
+        self.current[index]
+    }
+
     fn pressed(&self, index: usize) -> bool {
         !self.previous[index] && self.current[index]
     }
@@ -72,7 +76,7 @@ impl Player for User {
     }
 
     fn soft_drop(&mut self) -> bool {
-        self.pressed(2)
+        self.holded(2)
     }
 
     fn hard_drop(&mut self) -> bool {

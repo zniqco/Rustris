@@ -25,10 +25,14 @@ impl Object for PointMessage {
     fn update(&mut self) -> Vec<ObjectEvent> {
         let dt = get_frame_time();
 
-        self.delta -= dt;
-        self.y -= dt * 30.0;
+        self.delta -= dt / 0.75;
+        self.y -= dt * 24.0;
 
-        vec![]
+        if self.delta <= 0.0 {
+            vec![ObjectEvent::Destroy]
+        } else {
+            vec![]
+        }
     }
 
     fn draw(&self) {

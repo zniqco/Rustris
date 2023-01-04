@@ -2,7 +2,6 @@ mod background;
 mod functions;
 mod ingame;
 mod menu;
-mod place_effect;
 mod point_message;
 mod resources;
 
@@ -10,7 +9,6 @@ use background::*;
 use functions::*;
 use ingame::*;
 use menu::*;
-use place_effect::*;
 use point_message::*;
 use resources::*;
 
@@ -19,6 +17,7 @@ use macroquad::prelude::*;
 
 #[enum_dispatch]
 pub trait Object {
+    fn init(&mut self) { }
     fn update(&mut self) -> Vec<ObjectEvent> { Vec::new() }
     fn draw(&self);
 }
@@ -28,7 +27,6 @@ pub enum ObjectType {
     Background,
     Menu,
     Ingame,
-    PlaceEffect,
     PointMessage,
 }
 
@@ -58,6 +56,8 @@ impl Rustris {
     }
 
     pub fn init(&mut self) {
+        init_resources();
+
         Self::add_object(&mut self.last_id, &mut self.objects, 10000, Background::new().into());
         Self::add_object(&mut self.last_id, &mut self.objects, 0, Menu::new().into());
     }
@@ -103,14 +103,20 @@ impl Rustris {
 
         pop_matrix(); 
     
-        draw_text_aligned(get_fps().to_string().as_str(), screen_width() - 12.0, 16.0, *DEFAULT_FONT, 18, 1.0, 0.0, Color::from_rgba(255, 255, 255, 255));
-        draw_text_aligned(self.objects.len().to_string().as_str(), screen_width() - 12.0, 36.0, *DEFAULT_FONT, 12, 1.0, 0.0, Color::from_rgba(255, 255, 255, 255));
+        draw_text_aligned(format!("{:02.1}", 1.0 / get_frame_time()).as_str(), screen_width() - 12.0, 16.0, *DEFAULT_FONT, 22, 1.0, 0.0, Color::from_rgba(255, 255, 255, 255));
+        draw_text_aligned(self.objects.len().to_string().as_str(), screen_width() - 12.0, 36.0, *DEFAULT_FONT, 22, 1.0, 0.0, Color::from_rgba(255, 255, 255, 255));
     }
 
-    fn add_object(last_id: &mut u64, objects: &mut Vec<ObjectData>, depth: i32, object: ObjectType) {
+    pub fn quitted(&self) -> bool {
+        quitted()
+    }
+
+    fn add_object(last_id: &mut u64, objects: &mut Vec<ObjectData>, depth: i32, mut object: ObjectType) {
         let id = *last_id + 1;
 
         *last_id = id;
+
+        object.init();
 
         objects.push(ObjectData {
             id,
