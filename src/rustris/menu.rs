@@ -10,6 +10,7 @@ pub struct Menu {
     index_stack: Vec<usize>,
     current_index: usize,
     events: Vec<ObjectEvent>,
+    shake_delta: f32,
 }
 
 impl Menu {
@@ -19,6 +20,7 @@ impl Menu {
             index_stack: Vec::new(),
             current_index: 0,
             events: Vec::new(),
+            shake_delta: 0.0,
         }
     }
 }
@@ -29,10 +31,12 @@ impl Menu {
         self.index_stack.insert(0, self.current_index);
 
         self.current_index = 0;
+        self.shake_delta = 0.0;
     }
 
     fn dequeue(&mut self) {
         self.current_index = self.index_stack[0];
+        self.shake_delta = 0.0;
 
         self.item_stack.remove(0);
         self.index_stack.remove(0);
@@ -66,12 +70,9 @@ impl Menu {
             MenuItem::Default {
                 caption: "MARATHON",
                 callback: |menu| {
-                    menu.events.push(ObjectEvent::Create { 
-                        depth: 0,
-                        object: Ingame::new().into()
-                    });
+                    object_add(0, Board::new());
                     
-                    menu.events.push(ObjectEvent::Destroy);
+                    menu.events.push(ObjectEvent::DestroySelf);
                 }
             },
             MenuItem::Default {
@@ -107,17 +108,26 @@ impl Object for Menu {
 
     fn update(&mut self) -> Vec<ObjectEvent> {
         let mut events = vec![];
+        let dt = get_frame_time();
+
+        if self.shake_delta.abs() <= dt / 0.5 {
+            self.shake_delta = 0.0;
+        } else {
+            self.shake_delta -= dt / 0.5 * self.shake_delta.signum();
+        }
 
         if let Some(items) = self.item_stack.first_mut() {
             if is_key_pressed(KeyCode::Up) {
                 if self.current_index > 0 {
                     self.current_index -= 1;
+                    self.shake_delta = -1.0;
                 }
             }
 
             if is_key_pressed(KeyCode::Down) {
                 if self.current_index < items.len() - 1 {
                     self.current_index += 1;
+                    self.shake_delta = 1.0;
                 }
             }
 
@@ -149,9 +159,14 @@ impl Object for Menu {
                     false => Color::new(0.75, 0.75, 0.75, 1.0),
                 };
 
+                let offset = match self.current_index == i {
+                    true => simple_easing::elastic_in(self.shake_delta.abs()) * self.shake_delta.signum() * 10.0,
+                    false => 0.0,
+                };
+
                 match items[i] {
                     MenuItem::Default { caption, callback: _ } => {
-                        draw_text_aligned(caption, 0.0, draw_y, *DEFAULT_FONT, 56, 0.5, 0.5, color);
+                        draw_text_aligned(caption, 0.0, draw_y + offset, font_default(), 56, 0.5, 0.5, color);
                     },
                 }
 

@@ -1,3 +1,4 @@
+use macroquad::audio::play_sound_once;
 use macroquad::prelude::*;
 use macroquad::color::colors;
 use crate::game::*;
@@ -11,14 +12,14 @@ enum State {
     Ingame,
 }
 
-pub struct Ingame {
+pub struct Board {
     session: Game,
     state: State,
     state_time: f32,
     board_scale: f32,
 }
 
-impl Ingame {
+impl Board {
     pub fn new() -> Self {
         Self {
             session: Game::new(Config {
@@ -45,11 +46,31 @@ impl Ingame {
     fn draw_bottom(&self) -> f32 {
         CELL_SIZE * self.session.board.height() as f32 * 0.5
     }
+
+    #[cfg(debug_assertions)]
+    fn update_debug(&mut self) {
+        if is_mouse_button_down(MouseButton::Left) || is_mouse_button_down(MouseButton::Right) {
+            let mouse_position = mouse_position();
+            let draw_left = self.draw_left() + screen_width() * 0.5;
+            let draw_bottom = self.draw_bottom() + screen_height() * 0.5;
+            let x = ((mouse_position.0 - draw_left) / CELL_SIZE).floor() as i32;
+            let y = ((draw_bottom - mouse_position.1) / CELL_SIZE).floor() as i32;
+
+            if is_mouse_button_down(MouseButton::Left) {
+                self.session.board.set(x, y, BlockType::Gray);
+            } else {
+                self.session.board.set(x, y, BlockType::Empty);
+            }
+        }
+    }
 }
 
-impl Object for Ingame {
+impl Object for Board {
+    fn init(&mut self) {
+        play_sound_once(sound("ready"));
+    }
+    
     fn update(&mut self) -> Vec<ObjectEvent> {
-        let mut events = Vec::new();
         let dt = get_frame_time();
 
         self.state_time += dt;
@@ -58,6 +79,7 @@ impl Object for Ingame {
         match self.state {
             State::Ready => {
                 if self.state_time >= 2.0 {
+                    play_sound_once(sound("go"));
                     self.state = State::Ingame;
                 }
             },
@@ -78,7 +100,25 @@ impl Object for Ingame {
 
                 for event in self.session.update(dt) {
                     match event {
-                        EventType::Pointed { score: _, lines, combo, b2b, tspin } => {
+                        EventType::Move => {
+                            play_sound_once(sound("move"));
+                        },
+                        EventType::Rotate { is_spin } => {
+                            play_sound_once(sound(match is_spin {
+                                true => "rotate_spin",
+                                false => "rotate",
+                            }));
+                        },
+                        EventType::HardDrop => {
+                            play_sound_once(sound("hard_drop"));
+                        },
+                        EventType::Lock => {
+                            play_sound_once(sound("lock"));
+                        },
+                        EventType::Hold => {
+                            play_sound_once(sound("hold"))
+                        },
+                        EventType::LineClear { score: _, lines, combo, b2b, tspin } => {
                             let draw_left = self.draw_left();
                             let draw_right = self.draw_right();
                             let draw_bottom = self.draw_bottom();
@@ -110,34 +150,31 @@ impl Object for Ingame {
                                 _ => String::new(),
                             };
 
-                            events.push(ObjectEvent::Create { 
-                                depth: 0,
-                                object: PointMessage::new((draw_left + draw_right) * 0.5, (draw_top + draw_bottom) * 0.5, message, sub_message).into()
-                            });
+                            'a: {
+                                play_sound_once(sound(match (lines, tspin) {
+                                    (1 | 2 | 3, TSpinType::None) => "erase",
+                                    (4, TSpinType::None) => "erase_quad",
+                                    (1 | 2 | 3, TSpinType::Normal) | (1 | 2, TSpinType::Mini) => "tspin",
+                                    _ => break 'a,
+                                }));
+                            }
+
+                            object_add(-1, PointMessage::new((draw_left + draw_right) * 0.5, (draw_top + draw_bottom) * 0.5, message, sub_message));
                         },
-                        _ => { }
+                        EventType::LevelUp => {
+                            play_sound_once(sound("level_up"));
+                        }
+                        EventType::GameOver => {
+                            play_sound_once(sound("game_over"));
+                        },
                     }
                 }
             },
         }
 
-        if cfg!(debug_assertions) {
-            if is_mouse_button_down(MouseButton::Left) || is_mouse_button_down(MouseButton::Right) {
-                let mouse_position = mouse_position();
-                let draw_left = self.draw_left() + screen_width() * 0.5;
-                let draw_bottom = self.draw_bottom() + screen_height() * 0.5;
-                let x = ((mouse_position.0 - draw_left) / CELL_SIZE).floor() as i32;
-                let y = ((draw_bottom - mouse_position.1) / CELL_SIZE).floor() as i32;
+        self.update_debug();
 
-                if is_mouse_button_down(MouseButton::Left) {
-                    self.session.board.set(x, y, BlockType::Gray);
-                } else {
-                    self.session.board.set(x, y, BlockType::Empty);
-                }
-            }
-        }
-
-        events
+        Vec::new()
     }
 
     fn draw(&self) {
@@ -150,19 +187,22 @@ impl Object for Ingame {
         let draw_bottom = self.draw_bottom();
         let draw_top = self.draw_top();
 
+        // Textures
+        let block_texture = &texture("blocks");
+
         // Board
         draw_panel(draw_left, draw_top, draw_right - draw_left, draw_bottom - draw_top);
 
         match self.state {
             State::Ready => {
-                draw_text_aligned("READY?", (draw_left + draw_right) * 0.5, (draw_top + draw_bottom) * 0.5, *DEFAULT_FONT, 38, 0.5, 0.5, colors::WHITE);
+                draw_text_aligned("READY?", (draw_left + draw_right) * 0.5, (draw_top + draw_bottom) * 0.5, font_default(), 38, 0.5, 0.5, colors::WHITE);
             },
             State::Ingame => {
                 for y in 0..self.session.board.row_count() as i32 {
                     for x in 0..self.session.board.width() as i32 {
                         let position = calc_block_position(draw_left, draw_bottom, x, y, CELL_SIZE);
         
-                        draw_block(position.0, position.1, CELL_SIZE, self.session.board.get(x, y), 1.0);
+                        draw_block(block_texture, position.0, position.1, CELL_SIZE, self.session.board.get(x, y), 1.0);
                     }
                 }
         
@@ -177,7 +217,7 @@ impl Object for Ingame {
                         for x in 0..piece.width() {
                             let position = calc_block_position(draw_left, draw_bottom, x + piece.x(), y + piece.y() + ghost_offset, CELL_SIZE);
         
-                            draw_block(position.0, position.1, CELL_SIZE, piece.block_at(x, y), 0.3);
+                            draw_block(block_texture, position.0, position.1, CELL_SIZE, piece.block_at(x, y), 0.3);
                         }
                     }
         
@@ -192,10 +232,10 @@ impl Object for Ingame {
                             let position = calc_block_position(draw_left, draw_bottom, x + piece.x(), y + piece.y(), CELL_SIZE);
                             let block = piece.block_at(x, y);
         
-                            draw_block(position.0, position.1, CELL_SIZE, block, 1.0);
+                            draw_block(block_texture, position.0, position.1, CELL_SIZE, block, 1.0);
         
                             if block != BlockType::Empty && lock_flash > 0.0 {
-                                gl_use_material(*ADDITIVE_MATERIAL);
+                                gl_use_material(material_additive());
                                 draw_rectangle(position.0, position.1, CELL_SIZE, CELL_SIZE, Color::new(1.0, 1.0, 1.0, (lock_flash - 0.4).max(0.0) / 0.6 * 0.35));
                                 gl_use_default_material();
                             }
@@ -206,33 +246,33 @@ impl Object for Ingame {
         }
         
         // Hold
-        draw_text_aligned("HOLD", draw_left - 16.0, draw_top - 1.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned("HOLD", draw_left - 16.0, draw_top - 1.0, font_default(), 22, 1.0, 0.0, colors::WHITE);
         draw_panel(draw_left - 121.0, draw_top + 29.0, 102.0, 82.0);
 
         if let Some(hold_piece) = self.session.hold_piece {
-            draw_preview(draw_left - 70.0, draw_top + 70.0, PREVIEW_CELL_SIZE, &self.session.rotation, hold_piece, match self.session.hold_enabled {
+            draw_preview(block_texture, draw_left - 70.0, draw_top + 70.0, PREVIEW_CELL_SIZE, &self.session.rotation, hold_piece, match self.session.hold_enabled {
                 true => 1.0,
                 false => 0.5,
             });
         }
 
         // Next
-        draw_text_aligned("NEXT", draw_right + 16.0, draw_top - 1.0, *DEFAULT_FONT, 22, 0.0, 0.0, colors::WHITE);
+        draw_text_aligned("NEXT", draw_right + 16.0, draw_top - 1.0, font_default(), 22, 0.0, 0.0, colors::WHITE);
         draw_panel(draw_right + 19.0, draw_top + 29.0, 102.0, 322.0);
 
         for i in 0..5 {
-            draw_preview(draw_right + 70.0, draw_top + 70.0 + i as f32 * 60.0, PREVIEW_CELL_SIZE, &self.session.rotation, self.session.bag[i], 1.0);
+            draw_preview(block_texture, draw_right + 70.0, draw_top + 70.0 + i as f32 * 60.0, PREVIEW_CELL_SIZE, &self.session.rotation, self.session.bag[i], 1.0);
         }
 
         // Statuses
-        draw_text_aligned("LEVEL", draw_left - 16.0, draw_top + 136.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
-        draw_text_aligned(self.session.level.to_string().as_str(), draw_left - 15.0, draw_top + 166.0, *DEFAULT_FONT, 38, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned("LEVEL", draw_left - 16.0, draw_top + 136.0, font_default(), 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.level.to_string().as_str(), draw_left - 15.0, draw_top + 166.0, font_default(), 38, 1.0, 0.0, colors::WHITE);
 
-        draw_text_aligned("LINES", draw_left - 16.0, draw_top + 216.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
-        draw_text_aligned(self.session.lines.to_string().as_str(), draw_left - 15.0, draw_top + 246.0, *DEFAULT_FONT, 38, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned("LINES", draw_left - 16.0, draw_top + 216.0, font_default(), 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.lines.to_string().as_str(), draw_left - 15.0, draw_top + 246.0, font_default(), 38, 1.0, 0.0, colors::WHITE);
 
-        draw_text_aligned("SCORE", draw_left - 16.0, draw_top + 296.0, *DEFAULT_FONT, 22, 1.0, 0.0, colors::WHITE);
-        draw_text_aligned(self.session.score.to_string().as_str(), draw_left - 15.0, draw_top + 326.0, *DEFAULT_FONT, 38, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned("SCORE", draw_left - 16.0, draw_top + 296.0, font_default(), 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.score.to_string().as_str(), draw_left - 15.0, draw_top + 326.0, font_default(), 38, 1.0, 0.0, colors::WHITE);
 
         pop_matrix();
     }

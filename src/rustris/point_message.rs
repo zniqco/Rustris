@@ -29,7 +29,7 @@ impl Object for PointMessage {
         self.y -= dt * 24.0;
 
         if self.delta <= 0.0 {
-            vec![ObjectEvent::Destroy]
+            vec![ObjectEvent::DestroySelf]
         } else {
             vec![]
         }
@@ -44,10 +44,10 @@ impl Object for PointMessage {
         push_matrix_trs(draw_x, draw_y, 0.0, scale, scale);
 
         if self.sub_message.len() >= 1 {
-            draw_text_aligned(self.message.as_str(), 0.0, 2.0, *DEFAULT_FONT, 38, 0.5, 1.0, Color::from_rgba(255, 255, 255, alpha)); 
-            draw_text_aligned(self.sub_message.as_str(), 0.0, 6.0, *DEFAULT_FONT, 22, 0.5, 0.0, Color::from_rgba(255, 255, 255, alpha)); 
+            draw_text_aligned(self.message.as_str(), 0.0, 2.0, font_default(), 38, 0.5, 1.0, Color::from_rgba(255, 255, 255, alpha)); 
+            draw_text_aligned(self.sub_message.as_str(), 0.0, 6.0, font_default(), 22, 0.5, 0.0, Color::from_rgba(255, 255, 255, alpha)); 
         } else {
-            draw_text_aligned(self.message.as_str(), 0.0, 0.0, *DEFAULT_FONT, 38, 0.5, 0.5, Color::from_rgba(255, 255, 255, alpha));     
+            draw_text_aligned(self.message.as_str(), 0.0, 0.0, font_default(), 38, 0.5, 0.5, Color::from_rgba(255, 255, 255, alpha));     
         }
 
         pop_matrix();

@@ -13,3 +13,5 @@ simple-easing = "1.0.0"
 macroquad = "0.3.25"
 lazy_static = "1.4.0"
 enum_dispatch = "0.3.8"
+futures = "0.3.25"
+image = { version = "0.24", default-features = false, features = ["png", "jpeg"] }

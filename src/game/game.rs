@@ -1,11 +1,16 @@
-use std::collections::VecDeque;
 use super::*;
 
 const MINIMUM_NEXT_COUNT: usize = 7;
 
 pub enum EventType {
-    LockReset,
-    Pointed { score: i32, lines: i32, combo: i32, b2b: bool, tspin: TSpinType },
+    Move,
+    Rotate { is_spin: bool },
+    HardDrop,
+    Lock,
+    Hold,
+    LineClear { score: i32, lines: i32, combo: i32, b2b: bool, tspin: TSpinType },
+    LevelUp,
+    GameOver,
 }
 
 pub struct Game {
@@ -91,6 +96,8 @@ impl Game {
                         self.hold_piece = Some(piece.piece_type());
                         self.current_piece = None;
                         self.hold_enabled = false;
+
+                        events.push(EventType::Hold);
                     }
                 }
 
@@ -111,6 +118,8 @@ impl Game {
 
                         self.board.grayize();
                         self.game_over = true;
+
+                        events.push(EventType::GameOver);
 
                         break 'inner;
                     }
@@ -135,10 +144,7 @@ impl Game {
 
                         if piece.shift(&self.board, self.move_direction, 0) {
                             self.lock_delta = 0.0;
-    
-                            if self.lock_enabled && !piece.test(&self.board, 0, -1) {
-                                events.push(EventType::LockReset);
-                            }
+                            events.push(EventType::Move);
                         }
                     }
                 }
@@ -161,11 +167,8 @@ impl Game {
                     }
 
                     if moved {
+                        events.push(EventType::Move);
                         self.lock_delta = 0.0;
-
-                        if self.lock_enabled && !piece.test(&self.board, 0, -1) {
-                            events.push(EventType::LockReset);
-                        }
                     }
                 }
 
@@ -188,6 +191,7 @@ impl Game {
                     self.lock_delta += dt / self.level_data.lock_delay;
 
                     if self.lock_delta >= 1.0 || self.lock_force_delta >= 1.0 {
+                        events.push(EventType::Lock);
                         events.append(&mut self.place_piece());
 
                         break 'inner;
@@ -224,34 +228,34 @@ impl Game {
                 }
 
                 // Rotate
+                let mut rotated = false;
+
                 if self.player.cw() {
                     if piece.cw(&self.board) {
                         self.lock_delta = 0.0;
-
-                        if self.lock_enabled && !piece.test(&self.board, 0, -1) {
-                            events.push(EventType::LockReset);
-                        }
+                        rotated = true;
                     }
                 }
 
                 if self.player.ccw() {
                     if piece.ccw(&self.board) {
                         self.lock_delta = 0.0;
-
-                        if self.lock_enabled && !piece.test(&self.board, 0, -1) {
-                            events.push(EventType::LockReset);
-                        }
+                        rotated = true;
                     }
                 }
 
                 if self.player.flip() {
                     if piece.flip(&self.board) {
                         self.lock_delta = 0.0;
-
-                        if self.lock_enabled && !piece.test(&self.board, 0, -1) {
-                            events.push(EventType::LockReset);
-                        }
+                        rotated = true;
                     }
+                }
+
+                if rotated {
+                    events.push(EventType::Rotate { is_spin: match piece.tspin_state() {
+                        TSpinType::Normal | TSpinType::Mini => true,
+                        _ => false
+                    }});
                 }
 
                 // Hard drop
@@ -260,6 +264,7 @@ impl Game {
                         self.score += 2;
                     }
 
+                    events.push(EventType::HardDrop);
                     events.append(&mut self.place_piece());
                 }
             }
@@ -310,7 +315,7 @@ impl Game {
             self.lines += lines;
             
             if lines >= 1 || piece.tspin_state() != TSpinType::None {
-                events.push(EventType::Pointed {
+                events.push(EventType::LineClear {
                     score: points_and_b2b.0,
                     combo: self.combo,
                     lines,
@@ -319,10 +324,18 @@ impl Game {
                 });
             }
 
+            let mut level_up = false;
+
             while self.level_data.lines > 0 && self.lines - self.lines_offset >= self.level_data.lines {
                 self.lines_offset += self.level_data.lines;
                 self.level += 1;
                 self.level_data = self.config.levels[(self.level - 1) as usize];
+
+                level_up = true;
+            }
+
+            if level_up {
+                events.push(EventType::LevelUp);
             }
 
             self.current_piece = None;
