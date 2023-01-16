@@ -14,12 +14,10 @@ impl Background {
 }
 
 impl Object for Background {
-    fn update(&mut self) -> Vec<ObjectEvent> {
+    fn update(&mut self) {
         let dt = get_frame_time();
 
         self.alpha = (self.alpha + dt / 0.5).clamp(0.0, 1.0);
-
-        Vec::new()
     }
     
     fn draw(&self) {

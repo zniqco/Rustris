@@ -9,7 +9,6 @@ pub struct Menu {
     item_stack: Vec<Vec<MenuItem>>,
     index_stack: Vec<usize>,
     current_index: usize,
-    events: Vec<ObjectEvent>,
     shake_delta: f32,
 }
 
@@ -19,7 +18,6 @@ impl Menu {
             item_stack: Vec::new(),
             index_stack: Vec::new(),
             current_index: 0,
-            events: Vec::new(),
             shake_delta: 0.0,
         }
     }
@@ -70,9 +68,8 @@ impl Menu {
             MenuItem::Default {
                 caption: "MARATHON",
                 callback: |menu| {
+                    object_destroy(menu);
                     object_add(0, Board::new());
-                    
-                    menu.events.push(ObjectEvent::DestroySelf);
                 }
             },
             MenuItem::Default {
@@ -106,8 +103,7 @@ impl Object for Menu {
         self.item_stack.push(Self::menu_main());
     }
 
-    fn update(&mut self) -> Vec<ObjectEvent> {
-        let mut events = vec![];
+    fn update(&mut self) {
         let dt = get_frame_time();
 
         if self.shake_delta.abs() <= dt / 0.5 {
@@ -139,12 +135,6 @@ impl Object for Menu {
                 }
             }
         }
-
-        while let Some(event) = self.events.pop() {
-            events.push(event);
-        }
-
-        events
     }
 
     fn draw(&self) {

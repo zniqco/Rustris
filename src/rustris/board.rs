@@ -70,7 +70,7 @@ impl Object for Board {
         play_sound_once(sound("ready"));
     }
     
-    fn update(&mut self) -> Vec<ObjectEvent> {
+    fn update(&mut self) {
         let dt = get_frame_time();
 
         self.state_time += dt;
@@ -173,8 +173,6 @@ impl Object for Board {
         }
 
         self.update_debug();
-
-        Vec::new()
     }
 
     fn draw(&self) {

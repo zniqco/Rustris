@@ -22,16 +22,14 @@ impl PointMessage {
 }
 
 impl Object for PointMessage {
-    fn update(&mut self) -> Vec<ObjectEvent> {
+    fn update(&mut self) {
         let dt = get_frame_time();
 
         self.delta -= dt / 0.75;
         self.y -= dt * 24.0;
 
         if self.delta <= 0.0 {
-            vec![ObjectEvent::DestroySelf]
-        } else {
-            vec![]
+            object_destroy(self);
         }
     }
 

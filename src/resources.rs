@@ -6,21 +6,21 @@ use macroquad::prelude::*;
 use macroquad::miniquad::*;
 
 macro_rules! include_resources {
-    (sound $e:literal.$f:ident) => {{
+    (sound $f:ident $e:literal) => {{
         let bytes = include_bytes!(concat!("../include/", $e, ".", stringify!($f)));
         let sound = macroquad::audio::load_sound_from_bytes(bytes).await.unwrap();
     
         SOUNDS.write().unwrap().insert($e.to_string(), sound);
     }};
-    (texture $e:literal.$f:ident) => {{
+    (texture $f:ident $e:literal) => {{
         let bytes = include_bytes!(concat!("../include/", $e, ".", stringify!($f)));
         let texture = Texture2D::from_file_with_format(bytes, None);
 
         TEXTURES.write().unwrap().insert($e.to_string(), texture);
     }};
-    ($n:ident $e:literal.$f:ident $($nn:ident $ee:literal.$ff:ident)*) => {
-        include_resources! { $n $e.$f }
-        include_resources! { $($nn $ee.$ff)* }
+    ($n:ident $f:ident $e:literal $($nn:ident $ff:ident $ee:literal)*) => {
+        include_resources! { $n $f $e }
+        include_resources! { $($nn $ff $ee)* }
     };
 }
 
@@ -64,24 +64,24 @@ pub async fn init_resources() {
     lazy_static::initialize(&MATERIAL_ADDITIVE);
 
     include_resources! {
-        texture "blocks".png
-        texture "background_1".jpg
-        texture "background_2".jpg
-        texture "background_3".jpg
-        texture "background_4".jpg
-        sound "ready".ogg
-        sound "go".ogg
-        sound "move".ogg
-        sound "rotate".ogg
-        sound "rotate_spin".ogg
-        sound "hard_drop".ogg
-        sound "lock".ogg
-        sound "hold".ogg
-        sound "erase".ogg
-        sound "erase_quad".ogg
-        sound "tspin".ogg
-        sound "level_up".ogg
-        sound "game_over".ogg
+        texture png "blocks"
+        texture jpg "background_1"
+        texture jpg "background_2"
+        texture jpg "background_3"
+        texture jpg "background_4"
+        sound ogg "ready"
+        sound ogg "go"
+        sound ogg "move"
+        sound ogg "rotate"
+        sound ogg "rotate_spin"
+        sound ogg "hard_drop"
+        sound ogg "lock"
+        sound ogg "hold"
+        sound ogg "erase"
+        sound ogg "erase_quad"
+        sound ogg "tspin"
+        sound ogg "level_up"
+        sound ogg "game_over"
     }
 
     next_frame().await; // HACK: Hack for initialize delay
