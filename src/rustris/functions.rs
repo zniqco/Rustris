@@ -37,7 +37,7 @@ pub fn draw_block(texture: &Texture2D, x: f32, y: f32, cell_size: f32, block_typ
     }
 }
 
-pub fn draw_preview(texture: &Texture2D, x: f32, y: f32, cell_size: f32, rotation: &RotationType, piece: PieceType, alpha: f32) {
+pub fn draw_preview(texture: &Texture2D, x: f32, y: f32, cell_size: f32, rotation: &Rotation, piece: PieceType, alpha: f32) {
     let piece_data = rotation.blocks(piece);
     let size = (piece_data.shape[0][0].len() as i32, piece_data.shape[0].len() as i32);
     let offset = (size.0 as f32 * -0.5 + piece_data.preview_offset.0, size.1 as f32 * -0.5 + piece_data.preview_offset.1);

@@ -14,16 +14,19 @@ pub enum EventType {
 }
 
 pub struct Game {
-    pub config: Config,
+    pub input: Input,
+    das: f32,
+    arr: f32,
+    sdf: f32,
+    mode: Mode,
     pub board: Board,
-    pub score: i32,
-    pub level: i32,
-    pub lines: i32,
+    score: i64,
+    level: i32,
+    lines: i32,
     pub current_piece: Option<Piece>,
     pub bag: Vec<PieceType>,
-    pub player: PlayerType,
-    randomizer: RandomizerType,
-    pub rotation: RotationType,
+    randomizer: Randomizer,
+    pub rotation: Rotation,
     pub hold_piece: Option<PieceType>,
     pub hold_enabled: bool,
     move_direction: i32,
@@ -42,22 +45,24 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(config: Config) -> Self {
-        let width = config.width;
-        let height = config.height;
-        let seed = config.seed;
-        let first_level = config.levels[0];
+    pub fn new(config: Config, mode: Mode) -> Self {
+        let width = mode.width;
+        let height = mode.height;
+        let first_level = mode.levels[0];
         let mut instance = Self {
-            config: config,
+            input: Input::new(),
+            das: mode.das.unwrap_or(config.das),
+            arr: mode.arr.unwrap_or(config.arr),
+            sdf: mode.sdf.unwrap_or(config.sdf),
+            mode,
             board: Board::new(width, height),
             score: 0,
             level: 1,
             lines: 0,
             current_piece: None,
             bag: Vec::new(),
-            player: User::new(),
-            randomizer: SingleBag::new(seed),
-            rotation: SRS::new(),
+            randomizer: mode.randomizer.to_struct(mode.seed.unwrap_or(Self::epoch_time())),
+            rotation: mode.rotation.unwrap_or(config.rotation).to_struct(),
             hold_piece: None,
             hold_enabled: true,
             move_direction: 0,
@@ -80,14 +85,26 @@ impl Game {
         instance
     }
 
+    pub fn score(&self) -> i64 {
+        self.score
+    }
+
+    pub fn level(&self) -> i32 {
+        self.level
+    }
+
+    pub fn lines(&self) -> i32 {
+        self.lines
+    }
+
     pub fn update(&mut self, dt: f32) -> Vec<EventType> {
         let mut events = Vec::new();
 
-        self.player.update(&self.board, &self.current_piece, &self.bag, self.hold_piece);
+        self.input.update();
 
         'inner: loop {
             if !self.game_over {
-                if self.player.hold() && self.hold_enabled {
+                if self.input.hold() && self.hold_enabled {
                     if let Some(piece) = &mut self.current_piece {
                         if let Some(hold_piece) = self.hold_piece {
                             self.bag.insert(0, hold_piece);
@@ -125,7 +142,7 @@ impl Game {
                     }
 
                     self.gravity_delta = 0.0;
-                    self.move_delay = self.config.das;
+                    self.move_delay = self.das;
                     self.lock_delta = 0.0;
                     self.lock_force_delta = 0.0;
                     self.lock_enabled = false;
@@ -134,13 +151,13 @@ impl Game {
 
             if let Some(piece) = &mut self.current_piece {
                 // Move
-                let direction = self.player.horizontal();
+                let direction = self.input.horizontal();
 
                 if self.move_direction != direction {
                     self.move_direction = direction;
 
                     if direction != 0 {
-                        self.move_delay = self.config.das;
+                        self.move_delay = self.das;
 
                         if piece.shift(&self.board, self.move_direction, 0) {
                             self.lock_delta = 0.0;
@@ -156,7 +173,7 @@ impl Game {
 
                     while self.move_delay <= 0.0 {
                         if piece.shift(&self.board, self.move_direction, 0) {
-                            self.move_delay += self.config.arr;
+                            self.move_delay += self.arr;
 
                             moved = true;
                         } else {
@@ -179,6 +196,7 @@ impl Game {
                     if piece.shift(&self.board, 0, -1) {
                         self.gravity_delta -= 1.0;
                     } else {
+                        self.gravity_delta = 0.0;
                         break;
                     }
                 }
@@ -204,7 +222,7 @@ impl Game {
                 }
 
                 // Soft drop
-                if self.player.soft_drop() {
+                if self.input.soft_drop() {
                     if self.softdroping {
                         self.softdrop_delay -= dt;
                     } else {
@@ -215,7 +233,7 @@ impl Game {
                     while self.softdrop_delay <= 0.0 {
                         if piece.shift(&self.board, 0, -1) {
                             self.score += 1;
-                            self.softdrop_delay += self.config.sdf;
+                            self.softdrop_delay += self.sdf;
                             self.gravity_delta = 0.0;
                         } else {
                             self.softdrop_delay = 0.0;
@@ -230,21 +248,21 @@ impl Game {
                 // Rotate
                 let mut rotated = false;
 
-                if self.player.cw() {
+                if self.input.cw() {
                     if piece.cw(&self.board) {
                         self.lock_delta = 0.0;
                         rotated = true;
                     }
                 }
 
-                if self.player.ccw() {
+                if self.input.ccw() {
                     if piece.ccw(&self.board) {
                         self.lock_delta = 0.0;
                         rotated = true;
                     }
                 }
 
-                if self.player.flip() {
+                if self.input.flip() {
                     if piece.flip(&self.board) {
                         self.lock_delta = 0.0;
                         rotated = true;
@@ -259,7 +277,7 @@ impl Game {
                 }
 
                 // Hard drop
-                if self.player.hard_drop() {
+                if self.input.hard_drop() {
                     while piece.shift(&self.board, 0, -1) {
                         self.score += 2;
                     }
@@ -311,7 +329,7 @@ impl Game {
                 self.combo = 0;
             }
 
-            self.score += points_and_b2b.0;
+            self.score += points_and_b2b.0 as i64;
             self.lines += lines;
             
             if lines >= 1 || piece.tspin_state() != TSpinType::None {
@@ -329,7 +347,7 @@ impl Game {
             while self.level_data.lines > 0 && self.lines - self.lines_offset >= self.level_data.lines {
                 self.lines_offset += self.level_data.lines;
                 self.level += 1;
-                self.level_data = self.config.levels[(self.level - 1) as usize];
+                self.level_data = self.mode.levels[(self.level - 1) as usize];
 
                 level_up = true;
             }
@@ -365,5 +383,9 @@ impl Game {
             (2, TSpinType::Mini, _) => (400 * level, true),
             _ => (0, false),
         };
+    }
+
+    fn epoch_time() -> u64 {
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64
     }
 }

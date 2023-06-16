@@ -1,6 +1,4 @@
-use super::*;
-
-pub struct User {
+pub struct Input {
     previous: [bool; 8],
     current: [bool; 8],
     horizontal: i32,
@@ -14,9 +12,9 @@ pub struct User {
     pub hold: bool,
 }
 
-impl User {
-    pub fn new() -> PlayerType {
-        let instance = Self {
+impl Input {
+    pub fn new() -> Input {
+        Self {
             previous: [false; 8],
             current: [false; 8],
             horizontal: 0,
@@ -28,9 +26,7 @@ impl User {
             rotate_ccw: false,
             flip: false,
             hold: false,
-        };
-
-        instance.into()
+        }
     }
 
     fn holded(&self, index: usize) -> bool {
@@ -44,10 +40,8 @@ impl User {
     fn released(&self, index: usize) -> bool {
         self.previous[index] && !self.current[index]
     }
-}
 
-impl Player for User {
-    fn update(&mut self, board: &Board, piece: &Option<Piece>, bag: &Vec<PieceType>, hold: Option<PieceType>) {
+    pub fn update(&mut self) {
         self.previous = self.current;
         self.current = [
             self.move_left,
@@ -71,31 +65,31 @@ impl Player for User {
         }
     }
 
-    fn horizontal(&mut self) -> i32 {
+    pub fn horizontal(&mut self) -> i32 {
         self.horizontal
     }
 
-    fn soft_drop(&mut self) -> bool {
+    pub fn soft_drop(&mut self) -> bool {
         self.holded(2)
     }
 
-    fn hard_drop(&mut self) -> bool {
+    pub fn hard_drop(&mut self) -> bool {
         self.pressed(3)
     }
     
-    fn cw(&mut self) -> bool {
+    pub fn cw(&mut self) -> bool {
         self.pressed(4)
     }
     
-    fn ccw(&mut self) -> bool {
+    pub fn ccw(&mut self) -> bool {
         self.pressed(5)
     }
 
-    fn flip(&mut self) -> bool {
+    pub fn flip(&mut self) -> bool {
         self.pressed(6)
     }
 
-    fn hold(&mut self) -> bool {
+    pub fn hold(&mut self) -> bool {
         self.pressed(7)
     }
 }

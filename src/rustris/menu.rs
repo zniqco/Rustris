@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+use macroquad::audio::play_sound_once;
 use super::*;
 
 enum MenuItem {
@@ -69,7 +70,14 @@ impl Menu {
                 caption: "MARATHON",
                 callback: |menu| {
                     object_destroy(menu);
-                    object_add(0, Board::new());
+                    object_add(0, Board::new(crate::game::Config::default(), crate::game::MODE_MARATHON));
+                }
+            },
+            MenuItem::Default {
+                caption: "ZEN",
+                callback: |menu| {
+                    object_destroy(menu);
+                    object_add(0, Board::new(crate::game::Config::default(), crate::game::MODE_ZEN));
                 }
             },
             MenuItem::Default {
@@ -117,6 +125,8 @@ impl Object for Menu {
                 if self.current_index > 0 {
                     self.current_index -= 1;
                     self.shake_delta = -1.0;
+
+                    play_sound_once(sound("move"));
                 }
             }
 
@@ -124,10 +134,14 @@ impl Object for Menu {
                 if self.current_index < items.len() - 1 {
                     self.current_index += 1;
                     self.shake_delta = 1.0;
+
+                    play_sound_once(sound("move"));
                 }
             }
 
             if is_key_pressed(KeyCode::Enter) {
+                play_sound_once(sound("lock"));
+                
                 match items[self.current_index] {
                     MenuItem::Default { caption: _, callback } => {
                         callback(self);
@@ -141,7 +155,7 @@ impl Object for Menu {
         if let Some(items) = self.item_stack.first() {
             const ITEM_SIZE: f32 = 60.0;
             let count = items.len();
-            let mut draw_y = count as f32 * -ITEM_SIZE * 0.5;
+            let mut draw_y = (count - 1) as f32 * -ITEM_SIZE * 0.5;
 
             for i in 0..count {
                 let color = match self.current_index == i {

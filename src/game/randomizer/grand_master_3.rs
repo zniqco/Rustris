@@ -18,7 +18,7 @@ pub struct GrandMaster3 {
 }
 
 impl GrandMaster3 {
-    pub fn new(seed: u64) -> RandomizerType {
+    pub fn new(seed: u64) -> Randomizer {
         let mut instance = Self {
             seed: (seed & 0xFFFFFFFF) as u32,
             pool: Vec::new(),
@@ -47,7 +47,7 @@ impl GrandMaster3 {
     }
 }
 
-impl Randomizer for GrandMaster3 {
+impl RandomizerImpl for GrandMaster3 {
     fn pop(&mut self) -> PieceType {
         let mut position = 0usize;
         let mut piece = PieceType::I;

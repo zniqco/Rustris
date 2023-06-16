@@ -62,7 +62,6 @@ pub fn object_destroy<T: Object>(object: &T) {
     panic!()
 }
 
-
 pub fn object_destroy_by_id(id: u64) {
     unsafe {
         DESTROY_RESERVED.insert(id);

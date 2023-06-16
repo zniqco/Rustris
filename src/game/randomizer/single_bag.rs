@@ -8,7 +8,7 @@ pub struct SingleBag {
 }
 
 impl SingleBag {
-    pub fn new(seed: u64) -> RandomizerType {
+    pub fn new(seed: u64) -> Randomizer {
         let instance = Self {
             rng: StdRng::seed_from_u64(seed),
             queue: VecDeque::new(),
@@ -18,7 +18,7 @@ impl SingleBag {
     }
 }
 
-impl Randomizer for SingleBag {
+impl RandomizerImpl for SingleBag {
     fn pop(&mut self) -> PieceType {
         if self.queue.len() == 0 {
             let mut next = vec![];

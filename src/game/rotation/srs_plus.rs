@@ -48,12 +48,12 @@ pub const SRS_PLUS_KICK_I: KickData = KickData {
 pub struct SRSPlus;
 
 impl SRSPlus {
-    pub fn new() -> RotationType {
+    pub fn new() -> Rotation {
         Self.into()
     }
 }
 
-impl Rotation for SRSPlus {
+impl RotationImpl for SRSPlus {
     fn blocks(&self, piece: PieceType) -> &'static PieceData {
         match piece {
             PieceType::Z => &SRS_PIECE_Z,

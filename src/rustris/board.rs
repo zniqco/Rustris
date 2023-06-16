@@ -1,5 +1,5 @@
-use macroquad::audio::play_sound_once;
 use macroquad::prelude::*;
+use macroquad::audio::play_sound_once;
 use macroquad::color::colors;
 use crate::game::*;
 use super::*;
@@ -13,6 +13,8 @@ enum State {
 }
 
 pub struct Board {
+    config: Config,
+    mode: Mode,
     session: Game,
     state: State,
     state_time: f32,
@@ -20,11 +22,11 @@ pub struct Board {
 }
 
 impl Board {
-    pub fn new() -> Self {
+    pub fn new(config: Config, mode: Mode) -> Self {
         Self {
-            session: Game::new(Config {
-                ..Default::default()
-            }),
+            config,
+            mode,
+            session: Game::new(config, mode),
             state: State::Ready,
             state_time: 0.0,
             board_scale: 0.0,
@@ -76,6 +78,13 @@ impl Object for Board {
         self.state_time += dt;
         self.board_scale = (self.board_scale + dt / 0.5).min(1.0);
 
+        if is_key_pressed(KeyCode::R) {
+            object_destroy(self);
+            object_add(0, Board::new(self.config, self.mode));
+
+            return;
+        }
+
         match self.state {
             State::Ready => {
                 if self.state_time >= 2.0 {
@@ -84,19 +93,14 @@ impl Object for Board {
                 }
             },
             State::Ingame => {
-                match self.session.player {
-                    PlayerType::User(ref mut user) => {
-                        user.move_left = is_key_down(KeyCode::Left);
-                        user.move_right = is_key_down(KeyCode::Right);
-                        user.soft_drop = is_key_down(KeyCode::Down);
-                        user.hard_drop = is_key_down(KeyCode::Space);
-                        user.rotate_cw = is_key_down(KeyCode::Up) || is_key_down(KeyCode::X);
-                        user.rotate_ccw = is_key_down(KeyCode::Z);
-                        user.flip = is_key_down(KeyCode::A);
-                        user.hold = is_key_down(KeyCode::C);
-                    },
-                    _ => { }
-                }
+                self.session.input.move_left = is_key_down(KeyCode::Left);
+                self.session.input.move_right = is_key_down(KeyCode::Right);
+                self.session.input.soft_drop = is_key_down(KeyCode::Down);
+                self.session.input.hard_drop = is_key_down(KeyCode::Space);
+                self.session.input.rotate_cw = is_key_down(KeyCode::Up) || is_key_down(KeyCode::X);
+                self.session.input.rotate_ccw = is_key_down(KeyCode::Z);
+                self.session.input.flip = is_key_down(KeyCode::A);
+                self.session.input.hold = is_key_down(KeyCode::C);
 
                 for event in self.session.update(dt) {
                     match event {
@@ -172,6 +176,7 @@ impl Object for Board {
             },
         }
 
+        #[cfg(debug_assertions)]
         self.update_debug();
     }
 
@@ -264,13 +269,13 @@ impl Object for Board {
 
         // Statuses
         draw_text_aligned("LEVEL", draw_left - 16.0, draw_top + 136.0, font_default(), 22, 1.0, 0.0, colors::WHITE);
-        draw_text_aligned(self.session.level.to_string().as_str(), draw_left - 15.0, draw_top + 166.0, font_default(), 38, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.level().to_string().as_str(), draw_left - 15.0, draw_top + 166.0, font_default(), 38, 1.0, 0.0, colors::WHITE);
 
         draw_text_aligned("LINES", draw_left - 16.0, draw_top + 216.0, font_default(), 22, 1.0, 0.0, colors::WHITE);
-        draw_text_aligned(self.session.lines.to_string().as_str(), draw_left - 15.0, draw_top + 246.0, font_default(), 38, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.lines().to_string().as_str(), draw_left - 15.0, draw_top + 246.0, font_default(), 38, 1.0, 0.0, colors::WHITE);
 
         draw_text_aligned("SCORE", draw_left - 16.0, draw_top + 296.0, font_default(), 22, 1.0, 0.0, colors::WHITE);
-        draw_text_aligned(self.session.score.to_string().as_str(), draw_left - 15.0, draw_top + 326.0, font_default(), 38, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.score().to_string().as_str(), draw_left - 15.0, draw_top + 326.0, font_default(), 38, 1.0, 0.0, colors::WHITE);
 
         pop_matrix();
     }

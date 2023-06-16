@@ -25,13 +25,29 @@ pub struct KickData {
 }
 
 #[enum_dispatch]
-pub trait Rotation {
+pub trait RotationImpl {
     fn blocks(&self, piece: PieceType) -> &'static PieceData;
     fn kicks(&self, piece: PieceType) -> &'static KickData;
 }
 
-#[enum_dispatch(Rotation)]
+#[enum_dispatch(RotationImpl)]
+pub enum Rotation {
+    SRS,
+    SRSPlus,
+}
+
+#[derive(Clone, Copy)]
 pub enum RotationType {
     SRS,
     SRSPlus,
 }
+
+impl RotationType {
+    pub fn to_struct(&self) -> Rotation {
+        match self {
+            RotationType::SRS => SRS::new(),
+            RotationType::SRSPlus => SRSPlus::new(),
+        }
+    }
+}
+

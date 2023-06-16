@@ -28,7 +28,11 @@ lazy_static! {
     pub static ref TEXTURES: RwLock<HashMap<String, Texture2D>> = RwLock::new(HashMap::new());
     pub static ref SOUNDS: RwLock<HashMap<String, Sound>> = RwLock::new(HashMap::new());
     pub static ref FONT_DEFAULT: Font = load_ttf_font_from_bytes(include_bytes!("../include/font.otf")).unwrap();
-    pub static ref MATERIAL_ADDITIVE: Material = load_material(
+    pub static ref MATERIAL_ADDITIVE: Material = make_material_additive();
+}
+
+fn make_material_additive() -> Material {
+    load_material(
         include_str!("../include/default.vert"),
         include_str!("../include/default.frag"),
         MaterialParams {
@@ -42,7 +46,7 @@ lazy_static! {
             },
             ..Default::default()
         },
-    ).unwrap();
+    ).unwrap()
 }
 
 pub async fn init_resources() {
