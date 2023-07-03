@@ -118,7 +118,7 @@ impl Game {
                     }
                 }
 
-                if let None = &self.current_piece {
+                if self.current_piece.is_none() {
                     let mut new_piece = Piece::new(&self.rotation, self.bag[0], self.board.width(), self.board.height());
 
                     self.bag.remove(0);
@@ -248,32 +248,25 @@ impl Game {
                 // Rotate
                 let mut rotated = false;
 
-                if self.input.cw() {
-                    if piece.cw(&self.board) {
-                        self.lock_delta = 0.0;
-                        rotated = true;
-                    }
+                if self.input.cw() && piece.cw(&self.board) {
+                    self.lock_delta = 0.0;
+                    rotated = true;
                 }
 
-                if self.input.ccw() {
-                    if piece.ccw(&self.board) {
-                        self.lock_delta = 0.0;
-                        rotated = true;
-                    }
+                if self.input.ccw() && piece.ccw(&self.board) {
+                    self.lock_delta = 0.0;
+                    rotated = true;
                 }
 
-                if self.input.flip() {
-                    if piece.flip(&self.board) {
-                        self.lock_delta = 0.0;
-                        rotated = true;
-                    }
+                if self.input.flip() && piece.flip(&self.board) {
+                    self.lock_delta = 0.0;
+                    rotated = true;
                 }
 
                 if rotated {
-                    events.push(EventType::Rotate { is_spin: match piece.tspin_state() {
-                        TSpinType::Normal | TSpinType::Mini => true,
-                        _ => false
-                    }});
+                    events.push(EventType::Rotate {
+                        is_spin: matches!(piece.tspin_state(), TSpinType::Normal | TSpinType::Mini)
+                    });
                 }
 
                 // Hard drop
@@ -365,7 +358,7 @@ impl Game {
     }
 
     fn calc_points_and_b2b(level: i32, lines: i32, cleared: bool, tspin_state: TSpinType) -> (i32, bool) {
-        return match (lines, tspin_state, cleared) {
+        match (lines, tspin_state, cleared) {
             (1, TSpinType::None, true) => (800 * level, false),
             (1, TSpinType::None, false) => (100 * level, false),
             (2, TSpinType::None, true) => (1200 * level, false),
@@ -382,7 +375,7 @@ impl Game {
             (1, TSpinType::Mini, _) => (200 * level, true),
             (2, TSpinType::Mini, _) => (400 * level, true),
             _ => (0, false),
-        };
+        }
     }
 
     fn epoch_time() -> u64 {

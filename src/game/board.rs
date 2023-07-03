@@ -92,10 +92,7 @@ impl Board {
     }
 
     pub fn is_cleared(&self) -> bool {
-        match self.rows.len() {
-            0 => true,
-            _ => false,
-        }
+        matches!(self.rows.len(), 0)
     }
 
     pub fn grayize(&mut self) {

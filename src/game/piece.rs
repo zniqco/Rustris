@@ -142,10 +142,10 @@ impl Piece {
 
         self.rotate_state = (self.rotate_state + state_offset) % 4;
 
-        for i in 0..kick_table.len() {
-            if self.test(board, kick_table[i].0, kick_table[i].1) {
-                self.x += kick_table[i].0;
-                self.y += kick_table[i].1;    
+        for kick in kick_table {
+            if self.test(board, kick.0, kick.1) {
+                self.x += kick.0;
+                self.y += kick.1;    
                 self.tspin_update(board);
 
                 return true;

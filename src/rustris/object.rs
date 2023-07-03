@@ -3,9 +3,9 @@ use once_cell::sync::Lazy;
 use enum_dispatch::enum_dispatch;
 use super::*;
 
-static mut OBJECTS: Lazy<HashMap<u64, ObjectData>> = Lazy::new(|| HashMap::new());
-static mut CREATE_RESERVED: Lazy<VecDeque<ObjectData>> = Lazy::new(|| VecDeque::new());
-static mut DESTROY_RESERVED: Lazy<HashSet<u64>> = Lazy::new(|| HashSet::new());
+static mut OBJECTS: Lazy<HashMap<u64, ObjectData>> = Lazy::new(HashMap::new);
+static mut CREATE_RESERVED: Lazy<VecDeque<ObjectData>> = Lazy::new(VecDeque::new);
+static mut DESTROY_RESERVED: Lazy<HashSet<u64>> = Lazy::new(HashSet::new);
 static mut LAST_ID: Lazy<u64> = Lazy::new(|| 0);
 
 #[enum_dispatch]

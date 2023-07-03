@@ -121,22 +121,18 @@ impl Object for Menu {
         }
 
         if let Some(items) = self.item_stack.first_mut() {
-            if is_key_pressed(KeyCode::Up) {
-                if self.current_index > 0 {
-                    self.current_index -= 1;
-                    self.shake_delta = -1.0;
+            if is_key_pressed(KeyCode::Up) && self.current_index > 0 {
+                self.current_index -= 1;
+                self.shake_delta = -1.0;
 
-                    play_sound_once(sound("move"));
-                }
+                play_sound_once(sound("move"));
             }
 
-            if is_key_pressed(KeyCode::Down) {
-                if self.current_index < items.len() - 1 {
-                    self.current_index += 1;
-                    self.shake_delta = 1.0;
+            if is_key_pressed(KeyCode::Down) && self.current_index < items.len() - 1 {
+                self.current_index += 1;
+                self.shake_delta = 1.0;
 
-                    play_sound_once(sound("move"));
-                }
+                play_sound_once(sound("move"));
             }
 
             if is_key_pressed(KeyCode::Enter) {

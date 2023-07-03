@@ -41,7 +41,7 @@ impl Object for PointMessage {
 
         push_matrix_trs(draw_x, draw_y, 0.0, scale, scale);
 
-        if self.sub_message.len() >= 1 {
+        if !self.sub_message.is_empty() {
             draw_text_aligned(self.message.as_str(), 0.0, 2.0, font_default(), 38, 0.5, 1.0, Color::from_rgba(255, 255, 255, alpha)); 
             draw_text_aligned(self.sub_message.as_str(), 0.0, 6.0, font_default(), 22, 0.5, 0.0, Color::from_rgba(255, 255, 255, alpha)); 
         } else {

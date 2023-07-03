@@ -20,10 +20,10 @@ impl SingleBag {
 
 impl RandomizerImpl for SingleBag {
     fn pop(&mut self) -> PieceType {
-        if self.queue.len() == 0 {
+        if self.queue.is_empty() {
             let mut next = vec![];
 
-            next.extend_from_slice(&PIECES);
+            next.extend_from_slice(PIECES);
             next.shuffle(&mut self.rng);
 
             for entry in next {
