@@ -1,7 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod game;
 mod rustris;
-mod resources;
 
 use macroquad::prelude::*;
 use rustris::*;
@@ -9,8 +8,6 @@ use rustris::*;
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut rustris = Rustris::new();
-
-    resources::init_resources().await;
 
     rustris.init();
 

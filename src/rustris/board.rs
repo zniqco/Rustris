@@ -198,7 +198,7 @@ impl Object for Board {
 
         match self.state {
             State::Ready => {
-                draw_text_aligned("READY?", (draw_left + draw_right) * 0.5, (draw_top + draw_bottom) * 0.5, font_default(), 38, 0.5, 0.5, colors::WHITE);
+                draw_text_aligned("READY?", (draw_left + draw_right) * 0.5, (draw_top + draw_bottom) * 0.5, &FONT_DEFAULT, 38, 0.5, 0.5, colors::WHITE);
             },
             State::Ingame => {
                 for y in 0..self.session.board.row_count() as i32 {
@@ -238,7 +238,7 @@ impl Object for Board {
                             draw_block(block_texture, position.0, position.1, CELL_SIZE, block, 1.0);
         
                             if block != BlockType::Empty && lock_flash > 0.0 {
-                                gl_use_material(material_additive());
+                                gl_use_material(&MATERIAL_ADDITIVE);
                                 draw_rectangle(position.0, position.1, CELL_SIZE, CELL_SIZE, Color::new(1.0, 1.0, 1.0, (lock_flash - 0.4).max(0.0) / 0.6 * 0.35));
                                 gl_use_default_material();
                             }
@@ -249,7 +249,7 @@ impl Object for Board {
         }
         
         // Hold
-        draw_text_aligned("HOLD", draw_left - 16.0, draw_top - 1.0, font_default(), 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned("HOLD", draw_left - 16.0, draw_top - 1.0, &FONT_DEFAULT, 22, 1.0, 0.0, colors::WHITE);
         draw_panel(draw_left - 121.0, draw_top + 29.0, 102.0, 82.0);
 
         if let Some(hold_piece) = self.session.hold_piece {
@@ -260,7 +260,7 @@ impl Object for Board {
         }
 
         // Next
-        draw_text_aligned("NEXT", draw_right + 16.0, draw_top - 1.0, font_default(), 22, 0.0, 0.0, colors::WHITE);
+        draw_text_aligned("NEXT", draw_right + 16.0, draw_top - 1.0, &FONT_DEFAULT, 22, 0.0, 0.0, colors::WHITE);
         draw_panel(draw_right + 19.0, draw_top + 29.0, 102.0, 322.0);
 
         for i in 0..5 {
@@ -268,14 +268,14 @@ impl Object for Board {
         }
 
         // Statuses
-        draw_text_aligned("LEVEL", draw_left - 16.0, draw_top + 136.0, font_default(), 22, 1.0, 0.0, colors::WHITE);
-        draw_text_aligned(self.session.level().to_string().as_str(), draw_left - 15.0, draw_top + 166.0, font_default(), 38, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned("LEVEL", draw_left - 16.0, draw_top + 136.0, &FONT_DEFAULT, 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.level().to_string().as_str(), draw_left - 15.0, draw_top + 166.0, &FONT_DEFAULT, 38, 1.0, 0.0, colors::WHITE);
 
-        draw_text_aligned("LINES", draw_left - 16.0, draw_top + 216.0, font_default(), 22, 1.0, 0.0, colors::WHITE);
-        draw_text_aligned(self.session.lines().to_string().as_str(), draw_left - 15.0, draw_top + 246.0, font_default(), 38, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned("LINES", draw_left - 16.0, draw_top + 216.0, &FONT_DEFAULT, 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.lines().to_string().as_str(), draw_left - 15.0, draw_top + 246.0, &FONT_DEFAULT, 38, 1.0, 0.0, colors::WHITE);
 
-        draw_text_aligned("SCORE", draw_left - 16.0, draw_top + 296.0, font_default(), 22, 1.0, 0.0, colors::WHITE);
-        draw_text_aligned(self.session.score().to_string().as_str(), draw_left - 15.0, draw_top + 326.0, font_default(), 38, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned("SCORE", draw_left - 16.0, draw_top + 296.0, &FONT_DEFAULT, 22, 1.0, 0.0, colors::WHITE);
+        draw_text_aligned(self.session.score().to_string().as_str(), draw_left - 15.0, draw_top + 326.0, &FONT_DEFAULT, 38, 1.0, 0.0, colors::WHITE);
 
         pop_matrix();
     }

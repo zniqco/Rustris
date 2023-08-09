@@ -166,7 +166,7 @@ impl Object for Menu {
 
                 match items[i] {
                     MenuItem::Default { caption, callback: _ } => {
-                        draw_text_aligned(caption, 0.0, draw_y + offset, font_default(), 56, 0.5, 0.5, color);
+                        draw_text_aligned(caption, 0.0, draw_y + offset, &FONT_DEFAULT, 56, 0.5, 0.5, color);
                     },
                 }
 

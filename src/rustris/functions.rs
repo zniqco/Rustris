@@ -1,18 +1,18 @@
 use std::sync::Mutex;
 use lazy_static::lazy_static;
-use macroquad::{prelude::*, audio::Sound};
-use crate::{game::*, resources::*};
+use macroquad::prelude::*;
+use crate::game::*;
 
 lazy_static! {
     static ref QUITTED: Mutex<bool> = Mutex::new(false);
 }
 
-pub fn draw_text_aligned(text: &str, x: f32, y: f32, font: Font, font_size: u16, pivot_x: f32, pivot_y: f32, color: Color) {
+pub fn draw_text_aligned(text: &str, x: f32, y: f32, font: &Font, font_size: u16, pivot_x: f32, pivot_y: f32, color: Color) {
     let font_scale = 1.0;
     let dimensions = measure_text(text, Some(font), font_size, font_scale);
 
     draw_text_ex(text, x - dimensions.width * pivot_x, y + dimensions.offset_y - dimensions.height * pivot_y, TextParams {
-        font,
+        font: Some(font),
         font_size,
         font_scale,
         color,
@@ -28,7 +28,7 @@ pub fn draw_block(texture: &Texture2D, x: f32, y: f32, cell_size: f32, block_typ
     match block_type {
         BlockType::Empty | BlockType::Outside => { },
         _ => {
-            draw_texture_ex(*texture, x, y, Color::new(1.0, 1.0, 1.0, alpha), DrawTextureParams {
+            draw_texture_ex(texture, x, y, Color::new(1.0, 1.0, 1.0, alpha), DrawTextureParams {
                 dest_size: Some(Vec2::new(cell_size, cell_size)),
                 source: Some(Rect::new(block_type as i32 as f32 * 30.0, 0.0, 30.0, 30.0)),
                 ..Default::default()
@@ -54,26 +54,6 @@ pub fn draw_preview(texture: &Texture2D, x: f32, y: f32, cell_size: f32, rotatio
 pub fn draw_panel(x: f32, y: f32, width: f32, height: f32) {
     draw_rectangle_lines(x - 2.0, y - 2.0, width + 4.0, height + 4.0, 3.0, Color::from_rgba(255, 255, 255, 255));
     draw_rectangle(x, y, width, height, Color::new(0.0, 0.0, 0.0, 0.875));
-}
-
-pub fn texture(key: &str) -> Texture2D {
-    let texture = *(TEXTURES.read().unwrap().get(key).unwrap());
-
-    texture
-}
-
-pub fn sound(key: &str) -> Sound {
-    let sound = *(SOUNDS.read().unwrap().get(key).unwrap());
-
-    sound
-}
-
-pub fn font_default() -> Font {
-    *FONT_DEFAULT
-}
-
-pub fn material_additive() -> Material {
-    *MATERIAL_ADDITIVE
 }
 
 pub fn push_matrix_trs(x: f32, y: f32, deg: f32, scale_x: f32, scale_y: f32) {
