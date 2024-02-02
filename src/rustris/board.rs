@@ -14,7 +14,7 @@ enum State {
 
 pub struct Board {
     config: Config,
-    mode: Mode,
+    mode: ModeType,
     session: Game,
     state: State,
     state_time: f32,
@@ -22,11 +22,11 @@ pub struct Board {
 }
 
 impl Board {
-    pub fn new(config: Config, mode: Mode) -> Self {
+    pub fn new(config: Config, mode: ModeType) -> Self {
         Self {
             config,
             mode,
-            session: Game::new(config, mode),
+            session: Game::new(config, mode.to_struct(), epoch_time()),
             state: State::Ready,
             state_time: 0.0,
             board_scale: 0.0,
@@ -129,23 +129,23 @@ impl Object for Board {
                             let draw_top = self.draw_top();
 
                             let message = String::from(match (b2b, lines, tspin) {
-                                (false, 1, TSpinType::None) => "SINGLE",
-                                (false, 2, TSpinType::None) => "DOUBLE",
-                                (false, 3, TSpinType::None) => "TRIPLE",
-                                (false, 4, TSpinType::None) => "QUAD",
-                                (false, 1, TSpinType::Normal) => "T-SPIN SINGLE",
-                                (false, 2, TSpinType::Normal) => "T-SPIN DOUBLE",
-                                (false, 3, TSpinType::Normal) => "T-SPIN TRIPLE",
-                                (false, 1, TSpinType::Mini) => "T-SPIN MINI SINGLE",
-                                (false, 2, TSpinType::Mini) => "T-SPIN MINI DOUBLE",
-                                (true, 4, TSpinType::None) => "B2B QUAD",
-                                (true, 1, TSpinType::Normal) => "B2B T-SPIN SINGLE",
-                                (true, 2, TSpinType::Normal) => "B2B T-SPIN DOUBLE",
-                                (true, 3, TSpinType::Normal) => "B2B T-SPIN TRIPLE",
-                                (true, 1, TSpinType::Mini) => "B2B T-SPIN MINI SINGLE",
-                                (true, 2, TSpinType::Mini) => "B2B T-SPIN MINI DOUBLE",
-                                (_, 0, TSpinType::Normal) => "T-SPIN",
-                                (_, 0, TSpinType::Mini) => "T-SPIN MINI",
+                                (false, 1, TSpinState::None) => "SINGLE",
+                                (false, 2, TSpinState::None) => "DOUBLE",
+                                (false, 3, TSpinState::None) => "TRIPLE",
+                                (false, 4, TSpinState::None) => "QUAD",
+                                (false, 1, TSpinState::Normal) => "T-SPIN SINGLE",
+                                (false, 2, TSpinState::Normal) => "T-SPIN DOUBLE",
+                                (false, 3, TSpinState::Normal) => "T-SPIN TRIPLE",
+                                (false, 1, TSpinState::Mini) => "T-SPIN MINI SINGLE",
+                                (false, 2, TSpinState::Mini) => "T-SPIN MINI DOUBLE",
+                                (true, 4, TSpinState::None) => "B2B QUAD",
+                                (true, 1, TSpinState::Normal) => "B2B T-SPIN SINGLE",
+                                (true, 2, TSpinState::Normal) => "B2B T-SPIN DOUBLE",
+                                (true, 3, TSpinState::Normal) => "B2B T-SPIN TRIPLE",
+                                (true, 1, TSpinState::Mini) => "B2B T-SPIN MINI SINGLE",
+                                (true, 2, TSpinState::Mini) => "B2B T-SPIN MINI DOUBLE",
+                                (_, 0, TSpinState::Normal) => "T-SPIN",
+                                (_, 0, TSpinState::Mini) => "T-SPIN MINI",
                                 _ => "",
                             });
 
@@ -156,9 +156,9 @@ impl Object for Board {
 
                             'a: {
                                 play_sound_once(sound(match (lines, tspin) {
-                                    (1 | 2 | 3, TSpinType::None) => "erase",
-                                    (4, TSpinType::None) => "erase_quad",
-                                    (1 | 2 | 3, TSpinType::Normal) | (1 | 2, TSpinType::Mini) => "tspin",
+                                    (1 | 2 | 3, TSpinState::None) => "erase",
+                                    (4, TSpinState::None) => "erase_quad",
+                                    (1 | 2 | 3, TSpinState::Normal) | (1 | 2, TSpinState::Mini) => "tspin",
                                     _ => break 'a,
                                 }));
                             }
@@ -211,14 +211,14 @@ impl Object for Board {
         
                 if let Some(piece) = &self.session.current_piece {
                     let mut ghost_offset = 0;
-        
+
                     while piece.test(&self.session.board, 0, ghost_offset - 1) {
                         ghost_offset -= 1;
                     }
         
                     for y in 0..piece.height() {
                         for x in 0..piece.width() {
-                            let position = calc_block_position(draw_left, draw_bottom, x + piece.x(), y + piece.y() + ghost_offset, CELL_SIZE);
+                            let position = calc_block_position(draw_left, draw_bottom, x + piece.position().0, y + piece.position().1 + ghost_offset, CELL_SIZE);
         
                             draw_block(block_texture, position.0, position.1, CELL_SIZE, piece.block_at(x, y), 0.3);
                         }
@@ -232,7 +232,7 @@ impl Object for Board {
         
                     for y in 0..piece.height() {
                         for x in 0..piece.width() {
-                            let position = calc_block_position(draw_left, draw_bottom, x + piece.x(), y + piece.y(), CELL_SIZE);
+                            let position = calc_block_position(draw_left, draw_bottom, x + piece.position().0, y + piece.position().1, CELL_SIZE);
                             let block = piece.block_at(x, y);
         
                             draw_block(block_texture, position.0, position.1, CELL_SIZE, block, 1.0);

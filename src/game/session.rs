@@ -8,7 +8,7 @@ pub enum EventType {
     HardDrop,
     Lock,
     Hold,
-    LineClear { score: i32, lines: i32, combo: i32, b2b: bool, tspin: TSpinType },
+    LineClear { score: i32, lines: i32, combo: i32, b2b: bool, tspin: TSpinState },
     LevelUp,
     GameOver,
 }
@@ -45,7 +45,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(config: Config, mode: Mode) -> Self {
+    pub fn new(config: Config, mode: Mode, seed: u64) -> Self {
         let width = mode.width;
         let height = mode.height;
         let first_level = mode.levels[0];
@@ -61,7 +61,7 @@ impl Game {
             lines: 0,
             current_piece: None,
             bag: Vec::new(),
-            randomizer: mode.randomizer.to_struct(mode.seed.unwrap_or(Self::epoch_time())),
+            randomizer: mode.randomizer.to_struct(seed),
             rotation: mode.rotation.unwrap_or(config.rotation).to_struct(),
             hold_piece: None,
             hold_enabled: true,
@@ -119,7 +119,11 @@ impl Game {
                 }
 
                 if self.current_piece.is_none() {
-                    let mut new_piece = Piece::new(&self.rotation, self.bag[0], self.board.width(), self.board.height());
+                    let piece_type = self.bag[0];
+                    let piece_data = self.rotation.piece(piece_type);
+                    let spawn_x = self.board.width() as i32 / 2 + piece_data.spawn_offset.0;
+                    let spawn_y = self.board.height() as i32 + piece_data.spawn_offset.1;
+                    let mut new_piece = Piece::new(piece_type, piece_data, (spawn_x, spawn_y));
 
                     self.bag.remove(0);
                     self.fill_next();
@@ -265,7 +269,7 @@ impl Game {
 
                 if rotated {
                     events.push(EventType::Rotate {
-                        is_spin: matches!(piece.tspin_state(), TSpinType::Normal | TSpinType::Mini)
+                        is_spin: matches!(piece.tspin_state(), TSpinState::Normal | TSpinState::Mini)
                     });
                 }
 
@@ -325,7 +329,7 @@ impl Game {
             self.score += points_and_b2b.0 as i64;
             self.lines += lines;
             
-            if lines >= 1 || piece.tspin_state() != TSpinType::None {
+            if lines >= 1 || piece.tspin_state() != TSpinState::None {
                 events.push(EventType::LineClear {
                     score: points_and_b2b.0,
                     combo: self.combo,
@@ -357,28 +361,24 @@ impl Game {
         events
     }
 
-    fn calc_points_and_b2b(level: i32, lines: i32, cleared: bool, tspin_state: TSpinType) -> (i32, bool) {
+    fn calc_points_and_b2b(level: i32, lines: i32, cleared: bool, tspin_state: TSpinState) -> (i32, bool) {
         match (lines, tspin_state, cleared) {
-            (1, TSpinType::None, true) => (800 * level, false),
-            (1, TSpinType::None, false) => (100 * level, false),
-            (2, TSpinType::None, true) => (1200 * level, false),
-            (2, TSpinType::None, false) => (300 * level, false),
-            (3, TSpinType::None, true) => (1800 * level, false),
-            (3, TSpinType::None, false) => (500 * level, false),
-            (4, TSpinType::None, true) => (2000 * level, true),
-            (4, TSpinType::None, false) => (800 * level, true),
-            (0, TSpinType::Normal, _) => (400 * level, false),
-            (1, TSpinType::Normal, _) => (800 * level, true),
-            (2, TSpinType::Normal, _) => (1200 * level, true),
-            (3, TSpinType::Normal, _) => (1600 * level, true),
-            (0, TSpinType::Mini, _) => (100 * level, false),
-            (1, TSpinType::Mini, _) => (200 * level, true),
-            (2, TSpinType::Mini, _) => (400 * level, true),
+            (1, TSpinState::None, true) => (800 * level, false),
+            (1, TSpinState::None, false) => (100 * level, false),
+            (2, TSpinState::None, true) => (1200 * level, false),
+            (2, TSpinState::None, false) => (300 * level, false),
+            (3, TSpinState::None, true) => (1800 * level, false),
+            (3, TSpinState::None, false) => (500 * level, false),
+            (4, TSpinState::None, true) => (2000 * level, true),
+            (4, TSpinState::None, false) => (800 * level, true),
+            (0, TSpinState::Normal, _) => (400 * level, false),
+            (1, TSpinState::Normal, _) => (800 * level, true),
+            (2, TSpinState::Normal, _) => (1200 * level, true),
+            (3, TSpinState::Normal, _) => (1600 * level, true),
+            (0, TSpinState::Mini, _) => (100 * level, false),
+            (1, TSpinState::Mini, _) => (200 * level, true),
+            (2, TSpinState::Mini, _) => (400 * level, true),
             _ => (0, false),
         }
-    }
-
-    fn epoch_time() -> u64 {
-        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64
     }
 }

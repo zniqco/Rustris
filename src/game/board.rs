@@ -13,7 +13,7 @@ pub enum BlockType {
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
-pub enum TSpinType {
+pub enum TSpinState {
     None,
     Normal,
     Mini,

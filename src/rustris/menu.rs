@@ -1,5 +1,7 @@
 use macroquad::prelude::*;
 use macroquad::audio::play_sound_once;
+use crate::game::{Config, ModeType};
+
 use super::*;
 
 enum MenuItem {
@@ -70,14 +72,14 @@ impl Menu {
                 caption: "MARATHON",
                 callback: |menu| {
                     object_destroy(menu);
-                    object_add(0, Board::new(crate::game::Config::default(), crate::game::MODE_MARATHON));
+                    object_add(0, Board::new(Config::default(), ModeType::Marathon));
                 }
             },
             MenuItem::Default {
                 caption: "ZEN",
                 callback: |menu| {
                     object_destroy(menu);
-                    object_add(0, Board::new(crate::game::Config::default(), crate::game::MODE_ZEN));
+                    object_add(0, Board::new(Config::default(), ModeType::Zen));
                 }
             },
             MenuItem::Default {

@@ -3,7 +3,7 @@ use super::*;
 
 /* SRS+ From TETR.IO */
 
-pub const SRS_PLUS_KICK_ZLSJT: KickData = KickData {
+pub const SRS_PLUS_KICK_ZLSJT: Kick = Kick {
     cw: [
         &[(0, 0), (-1, 0), (-1, 1), (0, -2), (-1, -2)],
         &[(0, 0), (1, 0), (1, -1), (0, 2), (1, 2)],
@@ -24,7 +24,7 @@ pub const SRS_PLUS_KICK_ZLSJT: KickData = KickData {
     ]
 };
 
-pub const SRS_PLUS_KICK_I: KickData = KickData {
+pub const SRS_PLUS_KICK_I: Kick = Kick {
     cw: [
         &[(0, 0), (1, 0), (-2, 0), (-2, -1), (1, 2)],
         &[(0, 0), (-1, 0), (2, 0), (-1, 2), (2, -1)],
@@ -54,23 +54,57 @@ impl SRSPlus {
 }
 
 impl RotationImpl for SRSPlus {
-    fn blocks(&self, piece: PieceType) -> &'static PieceData {
+    fn piece(&self, piece: PieceType) -> PieceData {
         match piece {
-            PieceType::Z => &SRS_PIECE_Z,
-            PieceType::L => &SRS_PIECE_L,
-            PieceType::O => &SRS_PIECE_O,
-            PieceType::S => &SRS_PIECE_S,
-            PieceType::I => &SRS_PIECE_I,
-            PieceType::J => &SRS_PIECE_J,
-            PieceType::T => &SRS_PIECE_T,
-        }
-    }
-
-    fn kicks(&self, piece: PieceType) -> &'static KickData {
-        match piece {
-            PieceType::Z | PieceType::L | PieceType::S | PieceType::J | PieceType::T => &SRS_PLUS_KICK_ZLSJT,
-            PieceType::I => &SRS_PLUS_KICK_I,
-            PieceType::O => &KICK_NONE,
+            PieceType::Z => PieceData {
+                shape: &SRS_SHAPE_Z,
+                kick: &SRS_PLUS_KICK_ZLSJT,
+                block: BlockType::Red,
+                spawn_offset: (-2, -2),
+                preview_offset: (0.0, 0.5),
+            },
+            PieceType::L => PieceData {
+                shape: &SRS_SHAPE_L,
+                kick: &SRS_PLUS_KICK_ZLSJT,
+                block: BlockType::Orange,
+                spawn_offset: (-2, -2),
+                preview_offset: (0.0, 0.5),
+            },
+            PieceType::O => PieceData {
+                shape: &SRS_SHAPE_O,
+                kick: &KICK_NONE,
+                block: BlockType::Yellow,
+                spawn_offset: (-1, -1),
+                preview_offset: (0.0, 0.0),
+            },
+            PieceType::S => PieceData {
+                shape: &SRS_SHAPE_S,
+                kick: &SRS_PLUS_KICK_ZLSJT,
+                block: BlockType::Green,
+                spawn_offset: (-2, -2),
+                preview_offset: (0.0, 0.5),
+            },
+            PieceType::I => PieceData {
+                shape: &SRS_SHAPE_I,
+                kick: &SRS_PLUS_KICK_I,
+                block: BlockType::Cyan,
+                spawn_offset: (-2, -3),
+                preview_offset: (0.0, 0.5),
+            },
+            PieceType::J => PieceData {
+                shape: &SRS_SHAPE_J,
+                kick: &SRS_PLUS_KICK_ZLSJT,
+                block: BlockType::Blue,
+                spawn_offset: (-2, -2),
+                preview_offset: (0.0, 0.5),
+            },
+            PieceType::T => PieceData {
+                shape: &SRS_SHAPE_T,
+                kick: &SRS_PLUS_KICK_ZLSJT,
+                block: BlockType::Purple,
+                spawn_offset: (-2, -2),
+                preview_offset: (0.0, 0.5),
+            },
         }
     }
 }

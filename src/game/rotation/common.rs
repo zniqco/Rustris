@@ -1,6 +1,6 @@
 use super::*;
 
-pub const KICK_NONE: KickData = KickData {
+pub const KICK_NONE: Kick = Kick {
     cw: [
         &[(0, 0)],
         &[(0, 0)],
